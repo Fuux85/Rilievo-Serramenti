@@ -138,10 +138,10 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
         let transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-                user: 'arredoinfissitorino@gmail.com', 
-                pass: 'avfaqbpgjhkuezzr' 
-            }
-        });
+            user: process.env.GMAIL_USER,
+            pass: process.env.GMAIL_PASS
+           }
+    });
 
         let mailOptions = {
             from: 'arredoinfissitorino@gmail.com',
@@ -163,7 +163,7 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
     });
 });
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server in ascolto su http://localhost:${PORT}`);
 });
