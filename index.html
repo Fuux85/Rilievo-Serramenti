@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rilievo Serramenti</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+body { font-family: Arial, sans-serif; margin: 10px; }
+
+.header { text-align: center; margin-bottom: 20px; }
+
+.logo { max-width: 300px; height: auto; margin-bottom: 10px; }
+
+fieldset { padding: 15px; border: 1px solid #ccc; margin-bottom: 20px; }
+
+legend { font-weight: bold; font-size: 1.1em; }
+
+label { display: block; margin-top: 8px; }
+
+input, select, textarea {
+    margin-bottom: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px;
+    font-size: 16px;
+}
+
+canvas {
+    width: 100%;
+    height: 250px;
+    border: 2px solid #000;
+    background-color: #ffffff;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    touch-action: none;
+    display: block;
+}
+
+.step { display: none; }
+.step.active { display: block; }
+
+button {
+    margin-top: 10px;
+    padding: 12px;
+    font-size: 1em;
+    cursor: pointer;
+}
+
+.flex-row { display: flex; gap: 20px; flex-wrap: wrap; }
+
+@media (max-width: 700px){
+    .flex-row { flex-direction: column; }
+    button { width: 100%; }
+    canvas { height: 300px; }
+}
+
+/* Pulsanti piccoli sotto canvas */
+canvas + button {
+    width: auto;
+    padding: 5px 10px;
+    font-size: 13px;
+    min-width: 120px;
+}
+
+canvas + button + button {
+    margin-left: 8px;
+}
+
+input[type="radio"] { display: none; }
+
+input[type="radio"] + span {
+    display: inline-block;
+    padding: 8px 18px;
+    margin-right: 10px;
+    border: 2px solid #333;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+input[type="radio"]:checked + span {
+    background-color: #000;
+    color: #fff;
+}
+
+.radio-group { display: flex; gap: 10px; margin-bottom: 12px; }
+.radio-group label { margin-top: 0; }
+
+.error-msg {
+    display: none;
+    padding: 5px 10px;
+    margin-top: 5px;
+    background-color: white;
+    color: black;
+    border-radius: 4px;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.error-msg .icon {
+    background-color: orange;
+    color: white;
+    font-weight: bold;
+    padding: 0 6px;
+    border-radius: 2px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+<img src="https://www.arredoinfissitorino.net/wp-content/uploads/2024/04/ARREDOINFISSI-logo-vettoriale-scaled.webp" 
+alt="Arredoinfissi Torino" class="logo">
+<h1>Modulo Rilievo Serramenti</h1>
+</div>
+
+<form id="rilievoForm" action="/invia" method="post" enctype="multipart/form-data">
+<br><br> <!-- l'attributo action punta al POST /invia gestito dal server.js -->
+
+<!-- STEP 1 -->
+<div class="step active" id="step1">
+<fieldset>
+<legend>Info Cantiere</legend>
+
+<label>Data Rilievo Misure</label>
+<input type="date" name="data_rilievo" id="data_rilievo">
+<div class="error-msg"><span class="icon">!</span> <span class="msg-text"></span></div>
+
+<label>Tecnico Incaricato</label>
+<input type="text" name="tecnico_incaricato">
+<div class="error-msg"><span class="icon">!</span> <span class="msg-text"></span></div>
+
+<label>Nome e Cognome Cliente</label>
+<input type="text" name="cliente_nome">
+<div class="error-msg"><span class="icon">!</span> <span class="msg-text"></span></div>
+
+<label>Venditore</label>
+<input type="text" name="venditore">
+<div class="error-msg"><span class="icon">!</span> <span class="msg-text"></span></div>
+
+<label>Indirizzo Cliente</label>
+<input type="text" name="indirizzo_cliente">
+<div class="error-msg"><span class="icon">!</span> <span class="msg-text"></span></div>
+
+<label>Piano Abitazione</label>
+<input type="text" name="piano">
+<div class="error-msg"><span class="icon">!</span> <span class="msg-text"></span></div>
+
+<label>Autoscala</label>
+<div class="radio-group">
+<label><input type="radio" name="autoscala" value="Si"><span>Sì</span></label>
+<label><input type="radio" name="autoscala" value="No"><span>No</span></label>
+</div>
+<div class="error-msg"><span class="icon">!</span> <span class="msg-text"></span></div>
+
+<label>Occupazione suolo pubblico</label>
+<div class="radio-group">
+<label><input type="radio" name="occupazione_suolo" value="Si"><span>Sì</span></label>
+<label><input type="radio" name="occupazione_suolo" value="No"><span>No</span></label>
+</div>
+<div class="error-msg"><span class="icon">!</span> <span class="msg-text"></span></div>
+
+<label>Ascensore</label>
+<div class="radio-group">
+<label><input type="radio" name="ascensore" value="Si"><span>Sì</span></label>
+<label><input type="radio" name="ascensore" value="No"><span>No</span></label>
+</div>
+<div class="error-msg"><span class="icon">!</span> <span class="msg-text"></span></div>
+
+<label>ZTL</label>
+<div class="radio-group">
+<label><input type="radio" name="ztl" value="Si"><span>Sì</span></label>
+<label><input type="radio" name="ztl" value="No"><span>No</span></label>
+</div>
+<div class="error-msg"><span class="icon">!</span> <span class="msg-text"></span></div>
+
+<button type="button" onclick="nextStep1()">Avanti</button>
+</fieldset>
+</div>
+
+<!-- STEP 2: Scelta Percorso -->
+<div class="step" id="step2">
+<fieldset>
+<legend>Scelta Percorso di Compilazione</legend>
+
+<p>Scegli il percorso di compilazione:</p>
+<button type="button" onclick="selectPath('Serramenti ed Accessori')">Serramenti ed Accessori</button>
+<button type="button" onclick="selectPath('Porte Blindate o Porte Interne')">Porte Blindate o Porte Interne</button>
+<button type="button" onclick="selectPath('Accessori Liberi')">Accessori Liberi</button>
+
+<br><br>
+<button type="button" onclick="showStep('step1')">Indietro</button>
+</fieldset>
+</div>
+
+<!-- STEP 3 -->
+<div class="step" id="step3">
+<fieldset>
+<legend>Schema di Posa</legend>
+
+<label>Posa A</label>
+<canvas id="canvasA"></canvas>
+<button type="button" onclick="undoCanvas('canvasA')">Annulla ultima linea</button>
+<button type="button" onclick="clearCanvas('canvasA')">Pulisci</button>
+
+<label>Posa B</label>
+<canvas id="canvasB"></canvas>
+<button type="button" onclick="undoCanvas('canvasB')">Annulla ultima linea</button>
+<button type="button" onclick="clearCanvas('canvasB')">Pulisci</button>
+
+<label>Posa C</label>
+<canvas id="canvasC"></canvas>
+<button type="button" onclick="undoCanvas('canvasC')">Annulla ultima linea</button>
+<button type="button" onclick="clearCanvas('canvasC')">Pulisci</button>
+
+<label>Posa D</label>
+<canvas id="canvasD"></canvas>
+<button type="button" onclick="undoCanvas('canvasD')">Annulla ultima linea</button>
+<button type="button" onclick="clearCanvas('canvasD')">Pulisci</button>
+
+<br>
+<button type="button" onclick="showStep('step2')">Indietro</button>
+<button type="button" onclick="nextStep3()">Avanti</button>
+</fieldset>
+</div>
+
+<!-- STEP 4 -->
+<div class="step" id="step4">
+<fieldset>
+<legend>Rilievo Misure e Dettagli</legend>
+
+<div id="serramentiContainer"></div>
+
+<button type="button" onclick="creaSerramento()">Aggiungi Serramento</button>
+<br><br>
+<button type="button" id="backBtnStep4" onclick="showStep('step3')">Indietro</button>
+<button type="button" onclick="nextStep4()">Avanti</button>
+
+</fieldset>
+</div>
+
+<!-- STEP 5 -->
+<div class="step" id="step5">
+<fieldset>
+<legend>Foto Cantiere</legend>
+
+<div id="fotoContainer"></div>
+
+<button type="button" onclick="aggiungiFoto()">Aggiungi Foto</button>
+<br><br>
+<button type="button" onclick="showStep('step4')">Indietro</button>
+<button type="submit">Genera PDF e Invia</button>
+
+</fieldset>
+</div>
+
+</form>
+
+<script>
+/* === SCRIPT INTEGRATO COMPLETO === */
+
+let selectedPath = ''; // Variabile per salvare la scelta del percorso
+
+document.body.addEventListener("touchstart", function(e){
+    if(e.target.tagName === "CANVAS"){ e.preventDefault(); }
+}, { passive:false });
+
+function showStep(id){
+    document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
+    const step = document.getElementById(id);
+    step.classList.add('active');
+
+    // Forza il resize dei canvas quando lo step diventa visibile
+    setTimeout(() => {
+        step.querySelectorAll("canvas").forEach(canvas => {
+            if(canvas.forceResize){
+                canvas.forceResize();
+            }
+        });
+    }, 50);
+}
+
+/* Data automatica */
+const today = new Date();
+const yyyy = today.getFullYear();
+let mm = today.getMonth() + 1;
+let dd = today.getDate();
+if(dd < 10) dd = '0' + dd;
+if(mm < 10) mm = '0' + mm;
+document.getElementById('data_rilievo').value = `${yyyy}-${mm}-${dd}`;
+
+/* Validazione invariata */
+function nextStep1(){
+    document.querySelectorAll('#step1 .error-msg').forEach(div => div.style.display = "none");
+    let valid = true;
+
+    const fields = ["data_rilievo","tecnico_incaricato","cliente_nome","venditore","indirizzo_cliente","piano"];
+    fields.forEach(name=>{
+        const field = document.querySelector(`[name="${name}"]`);
+        const alertDiv = field.nextElementSibling;
+        if(!field.value.trim()){
+            alertDiv.querySelector('.msg-text').textContent = "Compila questo campo.";
+            alertDiv.style.display = "flex";
+            valid = false;
+        }
+    });
+
+    const radioGroups = ["autoscala","occupazione_suolo","ascensore","ztl"];
+    radioGroups.forEach(name => {
+        const group = document.querySelectorAll(`input[name="${name}"]`);
+        const selected = Array.from(group).some(r => r.checked);
+        const alertDiv = group[0].closest('.radio-group').nextElementSibling;
+        if(!selected){
+            alertDiv.querySelector('.msg-text').textContent = "Compila questo campo.";
+            alertDiv.style.display = "flex";
+            valid = false;
+        }
+    });
+
+    if(valid) showStep('step2');
+}
+
+function selectPath(choice) {
+    selectedPath = choice;
+    if (choice === 'Serramenti ed Accessori') {
+        document.getElementById('backBtnStep4').setAttribute('onclick', "showStep('step3')");
+        showStep('step3');
+    } else {
+        document.getElementById('backBtnStep4').setAttribute('onclick', "showStep('step2')");
+        showStep('step4');
+    }
+}
+
+function nextStep3(){ showStep('step4'); }
+
+function nextStep4(){ showStep('step5'); }
+
+/* ===== Canvas con Undo + Testo ===== */
+
+const canvasStore = {};
+
+function setupCanvas(canvas){
+    const ctx = canvas.getContext("2d");
+    canvasStore[canvas.id] = [];
+
+    function resize(){
+        const rect = canvas.getBoundingClientRect();
+
+        // Se non è visibile ancora, non fare nulla
+        if(rect.width === 0 || rect.height === 0) return;
+
+        const dpr = window.devicePixelRatio || 1;
+
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+
+        ctx.setTransform(1,0,0,1,0,0);
+        ctx.scale(dpr,dpr);
+
+        ctx.lineWidth = 2;
+        ctx.lineCap = "round";
+
+        redraw();
+    }
+
+    // Rende richiamabile il resize dall’esterno
+    canvas.forceResize = resize;
+
+    resize();
+    window.addEventListener("resize", resize);
+
+    function getPos(e){
+        const rect = canvas.getBoundingClientRect();
+        if(e.changedTouches){
+            return {x:e.changedTouches[0].clientX-rect.left,y:e.changedTouches[0].clientY-rect.top};
+        }
+        return {x:e.clientX-rect.left,y:e.clientY-rect.top};
+    }
+
+    let drawing=false, currentStroke=null;
+
+    function start(e){
+        drawing=true;
+        const pos=getPos(e);
+        currentStroke = {type:"stroke", points:[pos]};
+        canvasStore[canvas.id].push(currentStroke);
+        e.preventDefault();
+    }
+
+    function move(e){
+    if(!drawing) return;
+
+    const pos = getPos(e);
+    const startPoint = currentStroke.points[0];
+
+    const dx = pos.x - startPoint.x;
+    const dy = pos.y - startPoint.y;
+
+    const angle = Math.atan2(dy, dx);
+
+    // 🔥 SNAP OGNI 15°
+    const snapStep = Math.PI / 90; // 2 gradi
+    const snapAngle = Math.round(angle / snapStep) * snapStep;
+
+    const distance = Math.sqrt(dx*dx + dy*dy);
+
+    const newPoint = {
+        x: startPoint.x + Math.cos(snapAngle) * distance,
+        y: startPoint.y + Math.sin(snapAngle) * distance
+    };
+
+    currentStroke.points = [startPoint, newPoint];
+
+    redraw();
+    e.preventDefault();
+}
+
+    function stop(e){
+        if(!drawing) return;
+        drawing=false;
+        currentStroke=null;
+        e.preventDefault();
+    }
+
+    function redraw(){
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        canvasStore[canvas.id].forEach(item=>{
+            if(item.type==="stroke"){
+                ctx.beginPath();
+                if(item.points.length > 0){
+                    ctx.moveTo(item.points[0].x, item.points[0].y);
+                    for(let i=1; i<item.points.length; i++){
+                        ctx.lineTo(item.points[i].x, item.points[i].y);
+                    }
+                }
+                ctx.stroke();
+            }
+            if(item.type==="text"){
+                ctx.font="16px Arial";
+                ctx.fillText(item.text,item.x,item.y);
+            }
+        });
+    }
+
+    canvas.addEventListener("dblclick", function(e){
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const text = prompt("Inserisci testo:");
+    if(text){
+        // Aggiungi lo store
+        canvasStore[canvas.id].push({type:"text", text: text, x: x, y: y});
+        // Ridisegna tutto sul canvas usando il ctx corretto
+        redraw();
+    }
+});
+
+    // Aggiungi event listener per disegno
+    canvas.addEventListener("mousedown", start);
+    canvas.addEventListener("mousemove", move);
+    canvas.addEventListener("mouseup", stop);
+    canvas.addEventListener("touchstart", start, { passive: false });
+    canvas.addEventListener("touchmove", move, { passive: false });
+    canvas.addEventListener("touchend", stop, { passive: false });
+
+    canvas.undoLast=function(){
+        canvasStore[canvas.id].pop();
+        redraw();
+    };
+
+    canvas.clearAll=function(){
+        canvasStore[canvas.id]=[];
+        redraw();
+    };
+}
+
+function clearCanvas(id){ document.getElementById(id).clearAll(); }
+function undoCanvas(id){ document.getElementById(id).undoLast(); }
+
+["canvasA","canvasB","canvasC","canvasD"].forEach(id=>{
+    setupCanvas(document.getElementById(id));
+});
+
+/* Serramenti dinamici invariati */
+let serramentoCount=0;
+
+function creaSerramento(){
+    serramentoCount++;
+    const container=document.getElementById("serramentiContainer");
+    const wrapper=document.createElement("div");
+    wrapper.style.border="1px solid #ccc";
+    wrapper.style.padding="15px";
+    wrapper.style.marginBottom="20px";
+
+    wrapper.innerHTML=`
+    <h3>Serramento ${serramentoCount}</h3>
+    <div class="flex-row">
+        <div style="flex:1; min-width:280px;">
+            <label>Schema Serramento</label>
+            <canvas id="canvasS${serramentoCount}"></canvas>
+            <button type="button" onclick="undoCanvas('canvasS${serramentoCount}')">Annulla ultima linea</button>
+            <button type="button" onclick="clearCanvas('canvasS${serramentoCount}')">Pulisci Disegno</button>
+        </div>
+        <div style="flex:1; min-width:280px;">
+            <label>Tipologia*</label>
+            <select name="tipo_serramento[]" required>
+                <option value="">Seleziona</option>
+                <option>Serramento esterno</option>
+                <option>Porta interna</option>
+                <option>Porta blindata</option>
+            </select>
+            <label>Nome Serramento*</label>
+            <input type="text" name="nome_serramento[]" required>
+            <label>Larghezza (mm)*</label>
+            <input type="number" name="larghezza[]" required>
+            <label>Altezza (mm)*</label>
+            <input type="number" name="altezza[]" required>
+            <label>Senso apertura</label>
+            <input type="text" name="apertura[]">
+            <label>Tipologia vetro</label>
+            <input type="text" name="vetro[]">
+            <label>Contatti magnetici</label>
+            <input type="text" name="contatti[]">
+            <label>Note</label>
+            <textarea name="note[]" rows="2"></textarea>
+        </div>
+    </div>`;
+    container.appendChild(wrapper);
+    setupCanvas(document.getElementById("canvasS"+serramentoCount));
+}
+
+creaSerramento();
+
+let fotoCount = 0;
+
+function aggiungiFoto() {
+    fotoCount++;
+    const container = document.getElementById("fotoContainer");
+    const wrapper = document.createElement("div");
+    wrapper.style.border = "1px solid #ccc";
+    wrapper.style.padding = "15px";
+    wrapper.style.marginBottom = "20px";
+
+    wrapper.innerHTML = `
+    <h3>Foto ${fotoCount}</h3>
+    <input type="file" name="foto[]" accept="image/*" capture="environment" onchange="previewFoto(this, ${fotoCount})">
+    <img id="preview${fotoCount}" style="max-width: 100%; max-height: 300px; display: none;">
+    `;
+    container.appendChild(wrapper);
+}
+
+function previewFoto(input, id) {
+    const file = input.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = document.getElementById(`preview${id}`);
+            img.src = e.target.result;
+            img.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+// Aggiungi una foto iniziale
+aggiungiFoto();
+
+// ---------- gestione del submit del form multipagina ----------
+// il pulsante 'Genera PDF e Invia' è solo un submit standard: finora
+// non c'era codice che raccogliesse i dati e li inviasse al server.
+// la funzione sottostante intercetta l'evento, costruisce una FormData
+// con tutti i campi (inclusi canvas, foto e serramenti dinamici) e
+// fa una POST a /invia, che è l'endpoint definito in server.js.
+// possiamo espandere il codice per generare un PDF lato client usando
+// jsPDF/html2pdf se si vuole lavorare offline.
+
+document.getElementById('rilievoForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    console.log('[submit] invio form');
+    alert('submit avviato');
+    const form = e.target;
+    const formData = new FormData(form);
+
+    // include i disegni dei quattro schemi di posa
+    ['canvasA','canvasB','canvasC','canvasD'].forEach(id=>{
+        const c = document.getElementById(id);
+        if(c){
+            formData.append(id, c.toDataURL('image/png'));
+        }
+    });
+    // include i canvas creati dinamicamente per ogni serramento
+    for(let i=1;i<=serramentoCount;i++){
+        const c = document.getElementById('canvasS'+i);
+        if(c){
+            formData.append('canvasS'+i, c.toDataURL('image/png'));
+        }
+    }
+
+    try{
+        const url = form.action || '/invia';
+        console.log('[submit] fetch to', url);
+        const resp = await fetch(url, {
+            method:'POST',
+            body: formData
+        });
+        const text = await resp.text();
+        alert(text);
+    } catch(err) {
+        console.warn('Invio fallito, probabilmente offline', err);
+        alert('Errore invio: ' + err.message);
+        // se siamo offline o il server non è raggiungibile generiamo il PDF
+        generaPdfLocale();
+    }
+});
+
+// ---------- funzione di supporto per generare PDF lato client ----------
+async function generaPdfLocale(){
+    // usa jsPDF (includere la libreria in head via CDN)
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({unit:'mm', format:'a4'});
+    let y = 10;
+    pdf.setFontSize(16);
+    pdf.text('Rilievo Serramenti', 105, y, { align: 'center' });
+    y += 10;
+    pdf.setFontSize(12);
+    const fields = ['data_rilievo','tecnico_incaricato','cliente_nome','venditore','indirizzo_cliente','piano'];
+    fields.forEach(name=>{
+        const el = document.querySelector(`[name="${name}"]`);
+        if(el) pdf.text(`${name.replace(/_/g,' ')}: ${el.value}`, 10, y);
+        y += 6;
+    });
+
+    // aggiungo i canvas principali
+    ['canvasA','canvasB','canvasC','canvasD'].forEach(id=>{
+        const c = document.getElementById(id);
+        if(c){
+            const img = c.toDataURL('image/png');
+            pdf.addPage();
+            pdf.addImage(img, 'PNG', 15, 20, 180, 0);
+        }
+    });
+
+    // aggiungo i serramenti
+    if(serramentoCount>0){
+        pdf.addPage();
+        pdf.text('Serramenti',10,10);
+        for(let i=1;i<=serramentoCount;i++){
+            const tipo = document.querySelector(`[name="tipo_serramento[]"]`).value;
+            // semplificato
+            pdf.text(`Serramento ${i}`, 10, 20 + (i-1)*6);
+        }
+    }
+
+    const blob = pdf.output('blob');
+    if(navigator.share && navigator.canShare && navigator.canShare({files:[new File([blob],'rilievo.pdf',{type:'application/pdf'})]})){
+        try{
+            await navigator.share({
+                files:[new File([blob],'rilievo.pdf',{type:'application/pdf'})],
+                title:'Rilievo Serramenti',
+                text:'Documento generato localmente'
+            });
+            return;
+        } catch(e){ console.warn('Condivisione fallita',e); }
+    }
+    // fallback: scarica il file
+    pdf.save('rilievo.pdf');
+}
+
+
+</script>
+
+
+</body>
+</html>
