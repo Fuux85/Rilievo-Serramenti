@@ -582,40 +582,52 @@ aggiungiFoto();
 
 document.getElementById('rilievoForm').addEventListener('submit', async function(e){
     e.preventDefault();
-    console.log('[submit] invio form');
-    alert('submit avviato');
+    
     const form = e.target;
+    const btn = form.querySelector('button[type="submit"]');
+    const originalText = btn.textContent;
+    
+    // Feedback visivo per il tecnico
+    btn.textContent = "Invio in corso... attendi...";
+    btn.disabled = true;
+
     const formData = new FormData(form);
 
-    // include i disegni dei quattro schemi di posa
-    ['canvasA','canvasB','canvasC','canvasD'].forEach(id=>{
+    // 1. Raccogliamo i 4 schemi di posa principali
+    ['canvasA','canvasB','canvasC','canvasD'].forEach(id => {
         const c = document.getElementById(id);
         if(c){
             formData.append(id, c.toDataURL('image/png'));
         }
     });
-    // include i canvas creati dinamicamente per ogni serramento
-    for(let i=1;i<=serramentoCount;i++){
-        const c = document.getElementById('canvasS'+i);
-        if(c){
-            formData.append('canvasS'+i, c.toDataURL('image/png'));
-        }
-    }
 
-    try{
+    // 2. Raccogliamo i disegni di ogni singolo serramento aggiunto
+    const canvasSerramenti = document.querySelectorAll('canvas[id^="canvasS"]');
+    canvasSerramenti.forEach(c => {
+        formData.append(c.id, c.toDataURL('image/png'));
+    });
+
+    try {
         const url = form.action || '/invia';
-        console.log('[submit] fetch to', url);
         const resp = await fetch(url, {
-            method:'POST',
+            method: 'POST',
             body: formData
         });
-        const text = await resp.text();
-        alert(text);
+        
+        const resultText = await resp.text();
+        alert(resultText); // Ti dirà "PDF inviato correttamente!"
+        
+        if(resp.ok) {
+            // Se vuoi che il modulo si svuoti dopo l'invio, togli le due barre qui sotto:
+            // location.reload();
+        }
     } catch(err) {
-        console.warn('Invio fallito, probabilmente offline', err);
-        alert('Errore invio: ' + err.message);
-        // se siamo offline o il server non è raggiungibile generiamo il PDF
+        console.error('Errore invio:', err);
+        alert('Errore di connessione. Provo a generare il PDF sul telefono...');
         generaPdfLocale();
+    } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
     }
 });
 
