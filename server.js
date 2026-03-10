@@ -42,10 +42,10 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
         let mailOptions = {
             from: process.env.GMAIL_USER,
             to: 'arredoinfissitorino@gmail.com', 
-            subject: Rilievo Serramenti - ${data.cliente_nome},
-            text: Rilievo compilato il ${data.data_rilievo} da ${data.tecnico_incaricato}.\nIn allegato il documento PDF.,
+            subject: 'Rilievo Serramenti - ' + (data.cliente_nome || 'Nuovo Cliente'),
+            text: 'Rilievo compilato da ' + (data.tecnico_incaricato || 'Tecnico') + '.\nIn allegato il documento PDF.',
             attachments: [{
-                filename: rilievo_${data.cliente_nome || 'documento'}.pdf,
+                filename: 'rilievo_' + (data.cliente_nome || 'documento') + '.pdf',
                 content: pdfData
             }]
         };
@@ -66,19 +66,19 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
     doc.moveDown();
     doc.fontSize(14).font('Helvetica-Bold').text('Info Cantiere', { underline: true });
     doc.fontSize(12).font('Helvetica');
-    doc.text(Data Rilievo: ${data.data_rilievo || 'N/A'});
-    doc.text(Tecnico: ${data.tecnico_incaricato || 'N/A'});
-    doc.text(Cliente: ${data.cliente_nome || 'N/A'});
-    doc.text(Indirizzo: ${data.indirizzo_cliente || 'N/A'});
+    doc.text('Data Rilievo: ' + (data.data_rilievo || 'N/A'));
+    doc.text('Tecnico: ' + (data.tecnico_incaricato || 'N/A'));
+    doc.text('Cliente: ' + (data.cliente_nome || 'N/A'));
+    doc.text('Indirizzo: ' + (data.indirizzo_cliente || 'N/A'));
     doc.moveDown();
 
     // Canvas
-    ['canvasA', 'canvasB', 'canvasC', 'canvasD'].forEach(canvasId => {
+    ['canvasA', 'canvasB', 'canvasC', 'canvasD'].forEach(function(canvasId) {
         if (data[canvasId]) {
             try {
                 const base64Data = data[canvasId].replace(/^data:image\/png;base64,/, '');
                 doc.addPage();
-                doc.fontSize(14).font('Helvetica-Bold').text(Schema Posa ${canvasId.toUpperCase()});
+                doc.fontSize(14).font('Helvetica-Bold').text('Schema Posa ' + canvasId.toUpperCase());
                 doc.image(Buffer.from(base64Data, 'base64'), { width: 450 });
             } catch (e) { console.log("Errore canvas", e.message); }
         }
@@ -89,14 +89,14 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
     if (tipi.length > 0) {
         doc.addPage();
         doc.fontSize(14).font('Helvetica-Bold').text('Dettaglio Serramenti', { underline: true });
-        tipi.forEach((tipo, idx) => {
+        tipi.forEach(function(tipo, idx) {
             doc.moveDown();
-            doc.fontSize(12).font('Helvetica-Bold').text(SERRAMENTO ${idx + 1});
+            doc.fontSize(12).font('Helvetica-Bold').text('SERRAMENTO ' + (idx + 1));
             doc.fontSize(10).font('Helvetica');
-            doc.text(Tipologia: ${tipo});
-            doc.text(Misure: ${data['larghezza'] ? data['larghezza'][idx] : '?'} x ${data['altezza'] ? data['altezza'][idx] : '?'} mm);
+            doc.text('Tipologia: ' + tipo);
+            doc.text('Misure: ' + (data['larghezza'] ? data['larghezza'][idx] : '?') + ' x ' + (data['altezza'] ? data['altezza'][idx] : '?') + ' mm');
             
-            const canvasKey = canvasS${idx + 1};
+            const canvasKey = 'canvasS' + (idx + 1);
             if (data[canvasKey]) {
                 try {
                     const base64 = data[canvasKey].replace(/^data:image\/png;base64,/, '');
@@ -108,9 +108,9 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
 
     // Foto
     if (files.length > 0) {
-        files.forEach((file, idx) => {
+        files.forEach(function(file, idx) {
             doc.addPage();
-            doc.fontSize(14).font('Helvetica-Bold').text(Foto Cantiere ${idx + 1});
+            doc.fontSize(14).font('Helvetica-Bold').text('Foto Cantiere ' + (idx + 1));
             doc.image(file.buffer, { fit: [500, 600], align: 'center' });
         });
     }
@@ -119,4 +119,4 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => { console.log(Porta: ${PORT}); });
+app.listen(PORT, function() { console.log('Server attivo sulla porta: ' + PORT); });
