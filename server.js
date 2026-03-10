@@ -5,9 +5,8 @@ const nodemailer = require('nodemailer');
 const multer = require('multer');
 
 const app = express();
-const upload = multer({ storage: multer.memoryStorage() }); // Conserva file in memoria
+const upload = multer({ storage: multer.memoryStorage() });
 
-// Configurazione limiti per gestire disegni e foto pesanti
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(express.static('public'));
@@ -21,18 +20,14 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
     const files = req.files || [];
 
     console.log('=== NUOVO RILIEVO RICEVUTO ===');
-    console.log('Cliente:', data.cliente_nome);
-
-    // 1. INIZIALIZZAZIONE PDF IN MEMORIA (MODIFICA PUNTO 2)
+    
     const doc = new PDFDocument({ bufferPages: true, margin: 30 });
     let buffers = [];
     doc.on('data', buffers.push.bind(buffers));
 
-    // Gestione fine generazione PDF e invio Email
     doc.on('end', () => {
         const pdfData = Buffer.concat(buffers);
 
-        // CONFIGURAZIONE GMAIL (MODIFICA PUNTO 2)
         let transporter = nodemailer.createTransport({
             host: "smtp.gmail.com",
             port: 465,
@@ -41,9 +36,7 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
                 user: process.env.GMAIL_USER,
                 pass: process.env.GMAIL_PASS
             },
-            tls: {
-                rejectUnauthorized: false
-            }
+            tls: { rejectUnauthorized: false }
         });
 
         let mailOptions = {
@@ -62,15 +55,13 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
                 console.error('ERRORE INVIO:', error);
                 if (!res.headersSent) res.status(500).send("Errore nell'invio email.");
             } else {
-                console.log('EMAIL INVIATA CON SUCCESSO:', info.response);
+                console.log('EMAIL INVIATA:', info.response);
                 if (!res.headersSent) res.send('PDF inviato correttamente!');
             }
         });
     });
 
-    // --- COSTRUZIONE CONTENUTO PDF ---
-
-    // Titolo e Info Cantiere
+    // Contenuto PDF
     doc.fontSize(20).text('Rilievo Serramenti', { align: 'center' });
     doc.moveDown();
     doc.fontSize(14).font('Helvetica-Bold').text('Info Cantiere', { underline: true });
@@ -81,62 +72,51 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
     doc.text(Indirizzo: ${data.indirizzo_cliente || 'N/A'});
     doc.moveDown();
 
-    // Schemi di posa (Canvas A, B, C, D)
+    // Canvas
     ['canvasA', 'canvasB', 'canvasC', 'canvasD'].forEach(canvasId => {
         if (data[canvasId]) {
             try {
                 const base64Data = data[canvasId].replace(/^data:image\/png;base64,/, '');
-                const buffer = Buffer.from(base64Data, 'base64');
                 doc.addPage();
                 doc.fontSize(14).font('Helvetica-Bold').text(Schema Posa ${canvasId.toUpperCase()});
-                doc.image(buffer, { width: 450 });
-            } catch (e) { console.log(Errore canvas ${canvasId}:, e.message); }
+                doc.image(Buffer.from(base64Data, 'base64'), { width: 450 });
+            } catch (e) { console.log("Errore canvas", e.message); }
         }
     });
 
-    // Serramenti (Array)
+    // Serramenti
     const tipi = Array.isArray(data['tipo_serramento']) ? data['tipo_serramento'] : (data['tipo_serramento'] ? [data['tipo_serramento']] : []);
     if (tipi.length > 0) {
         doc.addPage();
         doc.fontSize(14).font('Helvetica-Bold').text('Dettaglio Serramenti', { underline: true });
-        
         tipi.forEach((tipo, idx) => {
             doc.moveDown();
             doc.fontSize(12).font('Helvetica-Bold').text(SERRAMENTO ${idx + 1});
             doc.fontSize(10).font('Helvetica');
             doc.text(Tipologia: ${tipo});
-            doc.text(Misure: ${data['larghezza'][idx]}x${data['altezza'][idx]} mm);
+            doc.text(Misure: ${data['larghezza'] ? data['larghezza'][idx] : '?'} x ${data['altezza'] ? data['altezza'][idx] : '?'} mm);
             
             const canvasKey = canvasS${idx + 1};
             if (data[canvasKey]) {
                 try {
                     const base64 = data[canvasKey].replace(/^data:image\/png;base64,/, '');
                     doc.image(Buffer.from(base64, 'base64'), { width: 300 });
-                } catch (e) { console.log("Errore schema serramento", e.message); }
+                } catch (e) { console.log("Errore schema", e.message); }
             }
         });
     }
 
-    // FOTO (MODIFICA PUNTO 3 - OTTIMIZZAZIONE)
+    // Foto
     if (files.length > 0) {
         files.forEach((file, idx) => {
             doc.addPage();
             doc.fontSize(14).font('Helvetica-Bold').text(Foto Cantiere ${idx + 1});
-            doc.moveDown();
-            try {
-                doc.image(file.buffer, { fit: [500, 600], align: 'center', valign: 'center' });
-            } catch (e) { 
-                doc.text("Errore caricamento immagine.");
-                console.log("Errore foto:", e.message); 
-            }
+            doc.image(file.buffer, { fit: [500, 600], align: 'center' });
         });
     }
 
-    // Chiude il documento (scatena l'evento 'end' sopra)
     doc.end();
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(Server attivo sulla porta ${PORT});
-});
+app.listen(PORT, () => { console.log(Porta: ${PORT}); });
