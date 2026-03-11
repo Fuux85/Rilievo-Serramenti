@@ -28,22 +28,19 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
     doc.on('end', () => {
         const pdfData = Buffer.concat(buffers);
 
-let transporter = nodemailer.createTransport({
-            host: "smtp.gmail.com",
+        // CONFIGURAZIONE BREVO (Sostituisci solo qui sotto)
+        let transporter = nodemailer.createTransport({
+            host: "smtp-relay.brevo.com",
             port: 587,
-            secure: false, // Dev'essere false per la porta 587
+            secure: false,
             auth: {
-                user: process.env.GMAIL_USER,
-                pass: process.env.GMAIL_PASS
-            },
-            tls: {
-                rejectUnauthorized: false,
-                minVersion: "TLSv1.2"
+                user: 'tua_mail_personale@gmail.com', 
+                pass: 'LA_TUA_CHIAVE_BREVO_QUI'
             }
         });
 
         let mailOptions = {
-            from: process.env.GMAIL_USER,
+            from: 'arredoinfissitorino@gmail.com', 
             to: 'arredoinfissitorino@gmail.com', 
             subject: 'Rilievo Serramenti - ' + (data.cliente_nome || 'Nuovo Cliente'),
             text: 'Rilievo compilato da ' + (data.tecnico_incaricato || 'Tecnico') + '.\nIn allegato il documento PDF.',
@@ -56,15 +53,15 @@ let transporter = nodemailer.createTransport({
         transporter.sendMail(mailOptions, (error, info) => {
             if (error) {
                 console.error('ERRORE INVIO:', error);
-                if (!res.headersSent) res.status(500).send("Errore nell'invio email.");
+                if (!res.headersSent) res.status(500).send("Errore invio.");
             } else {
-                console.log('EMAIL INVIATA:', info.response);
-                if (!res.headersSent) res.send('PDF inviato correttamente!');
+                console.log('SUCCESSO:', info.response);
+                if (!res.headersSent) res.send('PDF inviato!');
             }
         });
     });
 
-    // Contenuto PDF
+    // --- COSTRUZIONE DEL CONTENUTO PDF (Rimanere dentro app.post) ---
     doc.fontSize(20).text('Rilievo Serramenti', { align: 'center' });
     doc.moveDown();
     doc.fontSize(14).font('Helvetica-Bold').text('Info Cantiere', { underline: true });
@@ -75,7 +72,7 @@ let transporter = nodemailer.createTransport({
     doc.text('Indirizzo: ' + (data.indirizzo_cliente || 'N/A'));
     doc.moveDown();
 
-    // Canvas
+    // Canvas Schemi Posa
     ['canvasA', 'canvasB', 'canvasC', 'canvasD'].forEach(function(canvasId) {
         if (data[canvasId]) {
             try {
@@ -87,7 +84,7 @@ let transporter = nodemailer.createTransport({
         }
     });
 
-    // Serramenti
+    // Dettaglio Serramenti
     const tipi = Array.isArray(data['tipo_serramento']) ? data['tipo_serramento'] : (data['tipo_serramento'] ? [data['tipo_serramento']] : []);
     if (tipi.length > 0) {
         doc.addPage();
@@ -104,7 +101,7 @@ let transporter = nodemailer.createTransport({
                 try {
                     const base64 = data[canvasKey].replace(/^data:image\/png;base64,/, '');
                     doc.image(Buffer.from(base64, 'base64'), { width: 300 });
-                } catch (e) { console.log("Errore schema", e.message); }
+                } catch (e) { console.log("Errore schema serramento", e.message); }
             }
         });
     }
@@ -123,5 +120,3 @@ let transporter = nodemailer.createTransport({
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, function() { console.log('Server attivo sulla porta: ' + PORT); });
-
-
