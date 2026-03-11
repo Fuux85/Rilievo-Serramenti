@@ -33,10 +33,10 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
             host: "smtp-relay.brevo.com",
             port: 587,
             secure: false,
-            auth: {
-                user: 'tua_mail_personale@gmail.com', 
-                pass: 'LA_TUA_CHIAVE_BREVO_QUI'
-            }
+         auth: {
+            user: process.env.BREVO_USER, 
+            pass: process.env.BREVO_PASS
+        }
         });
 
         let mailOptions = {
@@ -120,3 +120,4 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, function() { console.log('Server attivo sulla porta: ' + PORT); });
+
