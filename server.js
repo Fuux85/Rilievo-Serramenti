@@ -28,15 +28,15 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
     doc.on('end', () => {
         const pdfData = Buffer.concat(buffers);
 
-        let transporter = nodemailer.createTransport({
-            host: "smtp.gmail.com",
-            port: 465,
-            secure: true, 
+let transporter = nodemailer.createTransport({
+            service: 'gmail',
             auth: {
                 user: process.env.GMAIL_USER,
                 pass: process.env.GMAIL_PASS
             },
-            tls: { rejectUnauthorized: false }
+            tls: {
+                rejectUnauthorized: false
+            }
         });
 
         let mailOptions = {
@@ -120,3 +120,4 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, function() { console.log('Server attivo sulla porta: ' + PORT); });
+
