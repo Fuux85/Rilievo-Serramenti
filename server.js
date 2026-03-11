@@ -1,8 +1,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const PDFDocument = require('pdfkit');
-const nodemailer = require('nodemailer');
 const multer = require('multer');
+const axios = require('axios'); // Libreria fondamentale per le API
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -19,7 +19,7 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
     const data = req.body;
     const files = req.files || [];
 
-    console.log('=== NUOVO RILIEVO RICEVUTO ===');
+    console.log('=== NUOVO RILIEVO RICEVUTO (VIA API) ===');
     
     const doc = new PDFDocument({ bufferPages: true, margin: 30 });
     let buffers = [];
@@ -27,41 +27,38 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
 
     doc.on('end', () => {
         const pdfData = Buffer.concat(buffers);
+        const pdfBase64 = pdfData.toString('base64');
 
-        // CONFIGURAZIONE BREVO (Sostituisci solo qui sotto)
-        let transporter = nodemailer.createTransport({
-            host: "smtp-relay.brevo.com",
-            port: 2525,
-            secure: false,
-         auth: {
-            user: process.env.BREVO_USER, 
-            pass: process.env.BREVO_PASS
-        }
-        });
-
-        let mailOptions = {
-            from: 'arredoinfissitorino@gmail.com', 
-            to: 'arredoinfissitorino@gmail.com', 
-            subject: 'Rilievo Serramenti - ' + (data.cliente_nome || 'Nuovo Cliente'),
-            text: 'Rilievo compilato da ' + (data.tecnico_incaricato || 'Tecnico') + '.\nIn allegato il documento PDF.',
-            attachments: [{
-                filename: 'rilievo_' + (data.cliente_nome || 'documento') + '.pdf',
-                content: pdfData
+        // PREPARAZIONE DATI PER API BREVO
+        const emailData = {
+            sender: { name: "App Rilievi", email: "arredoinfissitorino@gmail.com" },
+            to: [{ email: "arredoinfissitorino@gmail.com" }],
+            subject: "Rilievo Serramenti - " + (data.cliente_nome || "Nuovo Cliente"),
+            textContent: "In allegato il rilievo tecnico compilato.\nTecnico: " + (data.tecnico_incaricato || "N/A"),
+            attachment: [{
+                content: pdfBase64,
+                name: "rilievo_" + (data.cliente_nome || "documento") + ".pdf"
             }]
         };
 
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.error('ERRORE INVIO:', error);
-                if (!res.headersSent) res.status(500).send("Errore invio.");
-            } else {
-                console.log('SUCCESSO:', info.response);
-                if (!res.headersSent) res.send('PDF inviato!');
+        // CHIAMATA API A BREVO
+        axios.post('https://api.brevo.com/v3/smtp/email', emailData, {
+            headers: {
+                'api-key': process.env.BREVO_API_KEY, // Assicurati che su Render si chiami così
+                'Content-Type': 'application/json'
             }
+        })
+        .then(response => {
+            console.log('SUCCESSO: Email inviata tramite API Brevo');
+            if (!res.headersSent) res.send('PDF inviato correttamente!');
+        })
+        .catch(error => {
+            console.error('ERRORE API BREVO:', error.response ? error.response.data : error.message);
+            if (!res.headersSent) res.status(500).send("Errore nell'invio tramite API.");
         });
     });
 
-    // --- COSTRUZIONE DEL CONTENUTO PDF (Rimanere dentro app.post) ---
+    // --- COSTRUZIONE DEL PDF ---
     doc.fontSize(20).text('Rilievo Serramenti', { align: 'center' });
     doc.moveDown();
     doc.fontSize(14).font('Helvetica-Bold').text('Info Cantiere', { underline: true });
@@ -120,5 +117,3 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, function() { console.log('Server attivo sulla porta: ' + PORT); });
-
-
