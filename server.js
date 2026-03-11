@@ -31,7 +31,7 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
         // CONFIGURAZIONE BREVO (Sostituisci solo qui sotto)
         let transporter = nodemailer.createTransport({
             host: "smtp-relay.brevo.com",
-            port: 587,
+            port: 2525,
             secure: false,
          auth: {
             user: process.env.BREVO_USER, 
@@ -120,4 +120,5 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, function() { console.log('Server attivo sulla porta: ' + PORT); });
+
 
