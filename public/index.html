@@ -25,18 +25,23 @@ input, select, textarea {
     margin-bottom: 10px;
     width: 100%;
     box-sizing: border-box;
-    padding: 10px; /* Un filo di padding in più aiuta sui telefoni */
+    padding: 10px;
     font-size: 16px;
-    font-family: Arial, sans-serif; /* Forza lo stesso font ovunque */
+    font-family: Arial, sans-serif;
     border: 1px solid #ccc;
     border-radius: 4px;
 }
 
-/* Questo aggiunge lo spazio extra sopra il titolo delle Annotazioni */
+/* Spazio extra sopra il titolo delle Annotazioni */
 .spacer-top {
     margin-top: 25px !important; 
     display: block;
+    font-weight: bold; /* Opzionale: rende il titolo più visibile */
 }
+
+/* Stile specifico per il bottone dopo la textarea */
+textarea + button {
+    margin-top: 20px !important;
 }
 
 canvas {
