@@ -443,20 +443,17 @@ function move(e) {
     if (!drawing) return;
 
     const pos = getPos(e);
-    // Prendiamo l'inizio dell'ultimo segmento creato
-    const startPoint = currentStroke.points[0];
+    // startPoint è l'inizio del segmento che stiamo tracciando ora
+    let startPoint = currentStroke.points[0];
 
     const dx = pos.x - startPoint.x;
     const dy = pos.y - startPoint.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    // Creiamo un nuovo punto solo ogni 12 pixel di movimento 
-    // (regola questo numero se vuoi linee più o meno lunghe)
-    if (distance > 12) {
+    // Aspettiamo che il movimento sia di almeno 15 pixel per decidere la direzione
+    if (distance > 15) {
         const angle = Math.atan2(dy, dx);
-        
-        // SNAP a 2 gradi (il tuo preferito!)
-        const snapStep = Math.PI / 90; 
+        const snapStep = Math.PI / 90; // I tuoi 2 gradi
         const snapAngle = Math.round(angle / snapStep) * snapStep;
 
         const newPoint = {
@@ -464,13 +461,20 @@ function move(e) {
             y: startPoint.y + Math.sin(snapAngle) * distance
         };
 
-        // 1. Aggiorna il segmento attuale con il punto "raddrizzato"
-        currentStroke.points = [startPoint, newPoint];
+        // CONTROLLO CAMBIO DIREZIONE (per le "V" di apertura)
+        // Se il dito si è spostato molto dal punto "raddrizzato" attuale, 
+        // significa che hai cambiato direzione bruscamente.
+        const deviation = Math.sqrt(Math.pow(pos.x - newPoint.x, 2) + Math.pow(pos.y - newPoint.y, 2));
         
-        // 2. Chiude il tratto e ne inizia subito uno nuovo dal punto finale
-        // Questo permette di disegnare senza mai staccare il dito!
-        currentStroke = { type: "stroke", points: [newPoint] };
-        canvasStore[canvas.id].push(currentStroke);
+        if (deviation > 25) { 
+            // Hai svoltato! Chiudiamo questa linea e ne iniziamo una nuova dal vertice
+            currentStroke.points = [startPoint, newPoint];
+            currentStroke = { type: "stroke", points: [newPoint] };
+            canvasStore[canvas.id].push(currentStroke);
+        } else {
+            // Stai andando ancora dritto: aggiorna solo la fine del segmento
+            currentStroke.points = [startPoint, newPoint];
+        }
 
         redraw();
     }
