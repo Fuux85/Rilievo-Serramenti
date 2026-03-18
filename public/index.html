@@ -82,9 +82,18 @@ input[type="radio"] + span {
     transition: 0.2s;
 }
 
-input[type="radio"]:checked + span {
-    background-color: #000;
-    color: #fff;
+/* Se è selezionato il SI -> diventa VERDE */
+input[type="radio"][value="Si"]:checked + span {
+    background-color: #28a745;
+    color: white;
+    border-color: #1e7e34;
+}
+
+/* Se è selezionato il NO -> diventa ROSSO */
+input[type="radio"][value="No"]:checked + span {
+    background-color: #dc3545;
+    color: white;
+    border-color: #bd2130;
 }
 
 .radio-group { display: flex; gap: 10px; margin-bottom: 12px; }
