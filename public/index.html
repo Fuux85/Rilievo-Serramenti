@@ -439,31 +439,41 @@ function setupCanvas(canvas){
         e.preventDefault();
     }
 
-    function move(e){
-    if(!drawing) return;
+function move(e) {
+    if (!drawing) return;
 
     const pos = getPos(e);
+    // Prendiamo l'inizio dell'ultimo segmento creato
     const startPoint = currentStroke.points[0];
 
     const dx = pos.x - startPoint.x;
     const dy = pos.y - startPoint.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
 
-    const angle = Math.atan2(dy, dx);
+    // Creiamo un nuovo punto solo ogni 12 pixel di movimento 
+    // (regola questo numero se vuoi linee più o meno lunghe)
+    if (distance > 12) {
+        const angle = Math.atan2(dy, dx);
+        
+        // SNAP a 2 gradi (il tuo preferito!)
+        const snapStep = Math.PI / 90; 
+        const snapAngle = Math.round(angle / snapStep) * snapStep;
 
-    // 🔥 SNAP OGNI 15°
-    const snapStep = Math.PI / 90; // 2 gradi
-    const snapAngle = Math.round(angle / snapStep) * snapStep;
+        const newPoint = {
+            x: startPoint.x + Math.cos(snapAngle) * distance,
+            y: startPoint.y + Math.sin(snapAngle) * distance
+        };
 
-    const distance = Math.sqrt(dx*dx + dy*dy);
+        // 1. Aggiorna il segmento attuale con il punto "raddrizzato"
+        currentStroke.points = [startPoint, newPoint];
+        
+        // 2. Chiude il tratto e ne inizia subito uno nuovo dal punto finale
+        // Questo permette di disegnare senza mai staccare il dito!
+        currentStroke = { type: "stroke", points: [newPoint] };
+        canvasStore[canvas.id].push(currentStroke);
 
-    const newPoint = {
-        x: startPoint.x + Math.cos(snapAngle) * distance,
-        y: startPoint.y + Math.sin(snapAngle) * distance
-    };
-
-    currentStroke.points = [startPoint, newPoint];
-
-    redraw();
+        redraw();
+    }
     e.preventDefault();
 }
 
