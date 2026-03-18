@@ -58,52 +58,78 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
         });
     });
 
-    // --- COSTRUZIONE DEL PDF ---
-    doc.fontSize(20).text('Rilievo Serramenti', { align: 'center' });
+   // --- COSTRUZIONE DEL PDF ---
+    doc.fontSize(20).font('Helvetica-Bold').text('Rilievo Serramenti', { align: 'center' });
     doc.moveDown();
+    
+    // 1. INFO CANTIERE
     doc.fontSize(14).font('Helvetica-Bold').text('Info Cantiere', { underline: true });
     doc.fontSize(12).font('Helvetica');
     doc.text('Data Rilievo: ' + (data.data_rilievo || 'N/A'));
     doc.text('Tecnico: ' + (data.tecnico_incaricato || 'N/A'));
     doc.text('Cliente: ' + (data.cliente_nome || 'N/A'));
+    doc.text('Venditore: ' + (data.venditore || 'N/A'));
     doc.text('Indirizzo: ' + (data.indirizzo_cliente || 'N/A'));
+    doc.text('Piano: ' + (data.piano || 'N/A'));
+    
+    doc.moveDown(0.5);
+    doc.font('Helvetica-Bold').text('Logistica e Accesso:');
+    doc.font('Helvetica');
+    doc.text('- Autoscala: ' + (data.autoscala || 'Non specificato'));
+    doc.text('- Occupazione suolo pubblico: ' + (data.occupazione_suolo || 'Non specificato'));
+    doc.text('- Ascensore: ' + (data.ascensore || 'Non specificato'));
+    doc.text('- ZTL: ' + (data.ztl || 'Non specificato'));
     doc.moveDown();
 
-    // Canvas Schemi Posa
-    ['canvasA', 'canvasB', 'canvasC', 'canvasD'].forEach(function(canvasId) {
-        if (data[canvasId]) {
+    // 2. SCHEMI DI POSA (Canvas A, B, C, D)
+    ['canvasA', 'canvasB', 'canvasC', 'canvasD'].forEach(function(id) {
+        if (data[id] && data[id].includes('base64')) {
             try {
-                const base64Data = data[canvasId].replace(/^data:image\/png;base64,/, '');
+                const base64Data = data[id].replace(/^data:image\/png;base64,/, '');
                 doc.addPage();
-                doc.fontSize(14).font('Helvetica-Bold').text('Schema Posa ' + canvasId.toUpperCase());
+                doc.fontSize(14).font('Helvetica-Bold').text('Schema Posa ' + id.replace('canvas', ''));
                 doc.image(Buffer.from(base64Data, 'base64'), { width: 450 });
-            } catch (e) { console.log("Errore canvas", e.message); }
+            } catch (e) { console.log("Errore canvas posa", e.message); }
         }
     });
 
-    // Dettaglio Serramenti
-    const tipi = Array.isArray(data['tipo_serramento']) ? data['tipo_serramento'] : (data['tipo_serramento'] ? [data['tipo_serramento']] : []);
+    // 3. DETTAGLIO SERRAMENTI (Gestione Multipla Sicura)
+    const toArray = (val) => Array.isArray(val) ? val : (val ? [val] : []);
+
+    const tipi = toArray(data['tipo_serramento[]']);
+    const nomi = toArray(data['nome_serramento[]']);
+    const largh = toArray(data['larghezza[]']);
+    const alt = toArray(data['altezza[]']);
+    const aperture = toArray(data['apertura[]']);
+    const vetri = toArray(data['vetro[]']);
+    const note = toArray(data['note[]']);
+
     if (tipi.length > 0) {
         doc.addPage();
-        doc.fontSize(14).font('Helvetica-Bold').text('Dettaglio Serramenti', { underline: true });
+        doc.fontSize(16).font('Helvetica-Bold').text('Dettaglio Serramenti', { underline: true });
+        
         tipi.forEach(function(tipo, idx) {
             doc.moveDown();
-            doc.fontSize(12).font('Helvetica-Bold').text('SERRAMENTO ' + (idx + 1));
+            doc.fontSize(12).font('Helvetica-Bold').text('SERRAMENTO ' + (idx + 1) + ': ' + (nomi[idx] || 'N/D'));
             doc.fontSize(10).font('Helvetica');
             doc.text('Tipologia: ' + tipo);
-            doc.text('Misure: ' + (data['larghezza'] ? data['larghezza'][idx] : '?') + ' x ' + (data['altezza'] ? data['altezza'][idx] : '?') + ' mm');
+            doc.text('Misure: ' + (largh[idx] || '?') + ' x ' + (alt[idx] || '?') + ' mm');
+            doc.text('Apertura: ' + (aperture[idx] || 'N/D') + ' | Vetro: ' + (vetri[idx] || 'N/D'));
+            if(note[idx]) doc.text('Note: ' + note[idx]);
             
+            // Disegno del serramento specifico
             const canvasKey = 'canvasS' + (idx + 1);
-            if (data[canvasKey]) {
+            if (data[canvasKey] && data[canvasKey].includes('base64')) {
                 try {
                     const base64 = data[canvasKey].replace(/^data:image\/png;base64,/, '');
-                    doc.image(Buffer.from(base64, 'base64'), { width: 300 });
-                } catch (e) { console.log("Errore schema serramento", e.message); }
+                    doc.image(Buffer.from(base64, 'base64'), { width: 250 });
+                } catch (e) { console.log("Errore disegno serramento", e.message); }
             }
+            doc.text('--------------------------------------------------');
         });
     }
 
-    // Foto
+    // 4. FOTO CANTIERE
     if (files.length > 0) {
         files.forEach(function(file, idx) {
             doc.addPage();
@@ -113,6 +139,7 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
     }
 
     doc.end();
+});
 });
 
 const PORT = process.env.PORT || 3000;
