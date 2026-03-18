@@ -129,18 +129,49 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
         });
     }
 
-    // 4. FOTO CANTIERE
-    if (files.length > 0) {
+   // 4. FOTO CANTIERE
+    if (files && files.length > 0) {
         files.forEach(function(file, idx) {
-            doc.addPage();
-            doc.fontSize(14).font('Helvetica-Bold').text('Foto Cantiere ' + (idx + 1));
-            doc.image(file.buffer, { fit: [500, 600], align: 'center' });
+            try {
+                doc.addPage();
+                doc.fontSize(14).font('Helvetica-Bold').text('Foto Cantiere ' + (idx + 1));
+                doc.image(file.buffer, { fit: [500, 600], align: 'center' });
+            } catch (e) {
+                console.log("Errore inserimento foto:", e.message);
+            }
         });
     }
 
+    // Chiudiamo il PDF
     doc.end();
-});
-});
+
+    // Invio tramite Brevo quando il PDF è pronto
+    doc.on('end', async () => {
+        try {
+            const pdfBuffer = Buffer.concat(buffers);
+            const base64PDF = pdfBuffer.toString('base64');
+
+            await axios.post('https://api.brevo.com/v3/smtp/email', {
+                sender: { name: "Rilievo App", email: "arredoinfissitorino@gmail.com" },
+                to: [{ email: "arredoinfissitorino@gmail.com" }],
+                subject: "Nuovo Rilievo: " + (data.cliente_nome || "Senza Nome"),
+                textContent: "In allegato il PDF del rilievo.",
+                attachment: [{ content: base64PDF, name: "Rilievo_" + (data.cliente_nome || "cliente") + ".pdf" }]
+            }, {
+                headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' }
+            });
+
+            console.log("Email inviata con successo!");
+            if (!res.headersSent) res.send("PDF inviato correttamente via email!");
+        } catch (error) {
+            console.error("Errore Brevo:", error.response ? error.response.data : error.message);
+            if (!res.headersSent) res.status(500).send("Errore nell'invio dell'email.");
+        }
+    });
+
+}); // <--- QUESTA chiude app.post('/invia', ...)
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, function() { console.log('Server attivo sulla porta: ' + PORT); });
+app.listen(PORT, function() { 
+    console.log('Server attivo sulla porta: ' + PORT); 
+});
