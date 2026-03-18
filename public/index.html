@@ -73,16 +73,22 @@ button {
     canvas { height: 300px; }
 }
 
-/* Pulsanti piccoli sotto canvas */
-canvas + button {
-    width: auto;
-    padding: 5px 10px;
-    font-size: 13px;
-    min-width: 120px;
+/* Pulsanti piccoli sotto canvas (Annulla e Pulisci) */
+canvas + button, 
+canvas + button + button {
+    width: auto !important; /* Impedisce al tasto di occupare tutta la riga */
+    padding: 6px 12px;      /* Riduce l'altezza e lo spessore */
+    font-size: 13px;        /* Testo leggermente più piccolo */
+    min-width: 100px;       /* Larghezza minima per non farli minuscoli */
+    display: inline-block;  /* Li mette uno di fianco all'altro se c'è spazio */
+    margin-top: 5px;
+    background-color: #f8f9fa; /* Colore più neutro (opzionale) */
+    border: 1px solid #ccc;
 }
 
+/* Spazio tra il primo e il secondo pulsante */
 canvas + button + button {
-    margin-left: 8px;
+    margin-left: 10px;
 }
 
 input[type="radio"] { display: none; }
