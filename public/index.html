@@ -443,39 +443,26 @@ function move(e) {
     if (!drawing) return;
 
     const pos = getPos(e);
-    // startPoint è l'inizio del segmento che stiamo tracciando ora
-    let startPoint = currentStroke.points[0];
+    // Prendiamo l'ultimo punto registrato nella scia
+    const lastPoint = currentStroke.points[currentStroke.points.length - 1];
 
-    const dx = pos.x - startPoint.x;
-    const dy = pos.y - startPoint.y;
+    const dx = pos.x - lastPoint.x;
+    const dy = pos.y - lastPoint.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    // Aspettiamo che il movimento sia di almeno 15 pixel per decidere la direzione
+    // Registriamo un nuovo "micro-segmento" raddrizzato solo ogni 15 pixel
     if (distance > 15) {
         const angle = Math.atan2(dy, dx);
         const snapStep = Math.PI / 90; // I tuoi 2 gradi
         const snapAngle = Math.round(angle / snapStep) * snapStep;
 
         const newPoint = {
-            x: startPoint.x + Math.cos(snapAngle) * distance,
-            y: startPoint.y + Math.sin(snapAngle) * distance
+            x: lastPoint.x + Math.cos(snapAngle) * distance,
+            y: lastPoint.y + Math.sin(snapAngle) * distance
         };
 
-        // CONTROLLO CAMBIO DIREZIONE (per le "V" di apertura)
-        // Se il dito si è spostato molto dal punto "raddrizzato" attuale, 
-        // significa che hai cambiato direzione bruscamente.
-        const deviation = Math.sqrt(Math.pow(pos.x - newPoint.x, 2) + Math.pow(pos.y - newPoint.y, 2));
-        
-        if (deviation > 25) { 
-            // Hai svoltato! Chiudiamo questa linea e ne iniziamo una nuova dal vertice
-            currentStroke.points = [startPoint, newPoint];
-            currentStroke = { type: "stroke", points: [newPoint] };
-            canvasStore[canvas.id].push(currentStroke);
-        } else {
-            // Stai andando ancora dritto: aggiorna solo la fine del segmento
-            currentStroke.points = [startPoint, newPoint];
-        }
-
+        // Aggiungiamo il nuovo punto raddrizzato alla lista dei punti della linea corrente
+        currentStroke.points.push(newPoint);
         redraw();
     }
     e.preventDefault();
