@@ -79,7 +79,7 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
     doc.text('- Occupazione suolo pubblico: ' + (data.occupazione_suolo || 'Non specificato'));
     doc.text('- Ascensore: ' + (data.ascensore || 'Non specificato'));
     doc.text('- ZTL: ' + (data.ztl || 'Non specificato'));
-    doc.moveDown(0.5);
+    doc.moveDown(1.5);
     doc.font('Helvetica-Bold').text('Annotazioni Cantiere:');
     doc.font('Helvetica').text(data.note_cantiere || 'Nessuna annotazione particolare.');
     doc.moveDown();
