@@ -440,33 +440,47 @@ function setupCanvas(canvas){
     }
 
 function move(e) {
-    if (!drawing) return;
-
-    const pos = getPos(e);
-    // Prendiamo l'ultimo punto registrato nella scia
-    const lastPoint = currentStroke.points[currentStroke.points.length - 1];
-
-    const dx = pos.x - lastPoint.x;
-    const dy = pos.y - lastPoint.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-
-    // Registriamo un nuovo "micro-segmento" raddrizzato solo ogni 15 pixel
-    if (distance > 15) {
-        const angle = Math.atan2(dy, dx);
-        const snapStep = Math.PI / 90; // I tuoi 2 gradi
-        const snapAngle = Math.round(angle / snapStep) * snapStep;
-
-        const newPoint = {
-            x: lastPoint.x + Math.cos(snapAngle) * distance,
-            y: lastPoint.y + Math.sin(snapAngle) * distance
-        };
-
-        // Aggiungiamo il nuovo punto raddrizzato alla lista dei punti della linea corrente
-        currentStroke.points.push(newPoint);
+        if (!drawing) return;
+        const pos = getPos(e);
+        
+        // Durante il movimento, mostriamo la linea "elastica" 
+        // così vedi dove stai andando prima che si raddrizzi
+        currentStroke.points[1] = pos; 
+        
         redraw();
+        e.preventDefault();
     }
-    e.preventDefault();
-}
+
+    function stop(e) {
+        if (!drawing) return;
+
+        const startPoint = currentStroke.points[0];
+        const endPoint = currentStroke.points[1];
+
+        if (endPoint) {
+            const dx = endPoint.x - startPoint.x;
+            const dy = endPoint.y - startPoint.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            // Se la linea è più lunga di 5 pixel, la raddrizziamo
+            if (distance > 5) {
+                const angle = Math.atan2(dy, dx);
+                const snapStep = Math.PI / 90; // I tuoi 2 gradi
+                const snapAngle = Math.round(angle / snapStep) * snapStep;
+
+                // Calcoliamo il punto finale "perfetto"
+                currentStroke.points[1] = {
+                    x: startPoint.x + Math.cos(snapAngle) * distance,
+                    y: startPoint.y + Math.sin(snapAngle) * distance
+                };
+            }
+        }
+
+        drawing = false;
+        currentStroke = null;
+        redraw();
+        e.preventDefault();
+    }
 
     function stop(e){
         if(!drawing) return;
