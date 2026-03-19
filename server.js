@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const PDFDocument = require('pdfkit');
 const multer = require('multer');
-const axios = require('axios'); // Libreria fondamentale per le API
+const axios = require('axios');
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -25,40 +25,7 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
     let buffers = [];
     doc.on('data', buffers.push.bind(buffers));
 
-    doc.on('end', () => {
-        const pdfData = Buffer.concat(buffers);
-        const pdfBase64 = pdfData.toString('base64');
-
-        // PREPARAZIONE DATI PER API BREVO
-        const emailData = {
-            sender: { name: "App Rilievi", email: "arredoinfissitorino@gmail.com" },
-            to: [{ email: "arredoinfissitorino@gmail.com" }],
-            subject: "Rilievo Serramenti - " + (data.cliente_nome || "Nuovo Cliente"),
-            textContent: "In allegato il rilievo tecnico compilato.\nTecnico: " + (data.tecnico_incaricato || "N/A"),
-            attachment: [{
-                content: pdfBase64,
-                name: "rilievo_" + (data.cliente_nome || "documento") + ".pdf"
-            }]
-        };
-
-        // CHIAMATA API A BREVO
-        axios.post('https://api.brevo.com/v3/smtp/email', emailData, {
-            headers: {
-                'api-key': process.env.BREVO_API_KEY, // Assicurati che su Render si chiami così
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => {
-            console.log('SUCCESSO: Email inviata tramite API Brevo');
-            if (!res.headersSent) res.send('PDF inviato correttamente!');
-        })
-        .catch(error => {
-            console.error('ERRORE API BREVO:', error.response ? error.response.data : error.message);
-            if (!res.headersSent) res.status(500).send("Errore nell'invio tramite API.");
-        });
-    });
-
-   // --- COSTRUZIONE DEL PDF ---
+    // --- COSTRUZIONE DEL PDF ---
     doc.fontSize(20).font('Helvetica-Bold').text('Rilievo Serramenti', { align: 'center' });
     doc.moveDown();
     
@@ -96,69 +63,68 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
         }
     });
 
-    // 3. DETTAGLIO SERRAMENTI (Gestione Multipla Sicura)
+    // 3. GESTIONE ELEMENTI DINAMICI
     const toArray = (val) => Array.isArray(val) ? val : (val ? [val] : []);
 
-    const tipi = toArray(data['tipo_serramento[]']);
-    const nomi = toArray(data['nome_serramento[]']);
-    const largh = toArray(data['larghezza[]']);
-    const alt = toArray(data['altezza[]']);
-    const aperture = toArray(data['apertura[]']);
-    const vetri = toArray(data['vetro[]']);
-    const note = toArray(data['note[]']);
+    const scriviSezione = (titoloSezione, prefix) => {
+        const nomi = toArray(data[prefix + 'nome[]']);
+        const largh = toArray(data[prefix + 'larghezza[]']);
+        const alt = toArray(data[prefix + 'altezza[]']);
+        const note = toArray(data[prefix + 'note[]']);
 
-    if (tipi.length > 0) {
-        doc.addPage();
-        doc.fontSize(16).font('Helvetica-Bold').text('Dettaglio Serramenti', { underline: true });
-        
-        tipi.forEach(function(tipo, idx) {
-            doc.moveDown();
-            doc.fontSize(12).font('Helvetica-Bold').text('SERRAMENTO ' + (idx + 1) + ': ' + (nomi[idx] || 'N/D'));
-            doc.fontSize(10).font('Helvetica');
-            doc.text('Tipologia: ' + tipo);
-            doc.text('Misure: ' + (largh[idx] || '?') + ' x ' + (alt[idx] || '?') + ' mm');
-            doc.text('Apertura: ' + (aperture[idx] || 'N/D') + ' | Vetro: ' + (vetri[idx] || 'N/D'));
-            if(note[idx]) doc.text('Note: ' + note[idx]);
+        if (nomi.length > 0) {
+            doc.addPage();
+            doc.fontSize(16).font('Helvetica-Bold').text(titoloSezione, { underline: true });
             
-            // Disegno del serramento specifico
-            const canvasKey = 'canvasS' + (idx + 1);
-            if (data[canvasKey] && data[canvasKey].includes('base64')) {
-                try {
-                    const base64 = data[canvasKey].replace(/^data:image\/png;base64,/, '');
-                    doc.image(Buffer.from(base64, 'base64'), { width: 250 });
-                } catch (e) { console.log("Errore disegno serramento", e.message); }
-            }
-            doc.text('--------------------------------------------------');
-        });
-    }
+            nomi.forEach((nome, idx) => {
+                doc.moveDown();
+                doc.fontSize(12).font('Helvetica-Bold').text(`${titoloSezione.toUpperCase()} ${idx + 1}: ${nome || 'N/D'}`);
+                doc.fontSize(10).font('Helvetica');
+                doc.text(`Misure: ${largh[idx] || '?'} x ${alt[idx] || '?'} mm`);
+                if (note[idx]) doc.text(`Note: ${note[idx]}`);
 
-   // 4. FOTO CANTIERE
+                const tuttiCanvasSezione = Object.keys(data).filter(k => k.startsWith('canvas_' + prefix.replace('_','')));
+                const mioCanvas = tuttiCanvasSezione[idx];
+
+                if (mioCanvas && data[mioCanvas] && data[mioCanvas].includes('base64')) {
+                    try {
+                        const base64 = data[mioCanvas].replace(/^data:image\/png;base64,/, '');
+                        doc.image(Buffer.from(base64, 'base64'), { width: 250 });
+                    } catch (e) { console.log("Errore disegno " + prefix, e.message); }
+                }
+                doc.text('--------------------------------------------------');
+            });
+        }
+    };
+
+    scriviSezione('Serramenti', '');
+    scriviSezione('Porte', 'porte_');
+    scriviSezione('Accessori', 'accessori_');
+
+    // 4. FOTO CANTIERE
     if (files && files.length > 0) {
         files.forEach(function(file, idx) {
             try {
                 doc.addPage();
                 doc.fontSize(14).font('Helvetica-Bold').text('Foto Cantiere ' + (idx + 1));
                 doc.image(file.buffer, { fit: [500, 600], align: 'center' });
-            } catch (e) {
-                console.log("Errore inserimento foto:", e.message);
-            }
+            } catch (e) { console.log("Errore inserimento foto:", e.message); }
         });
     }
 
-    // Chiudiamo il PDF
     doc.end();
 
-    // Invio tramite Brevo quando il PDF è pronto
+    // INVIO UNICO TRAMITE BREVO
     doc.on('end', async () => {
         try {
             const pdfBuffer = Buffer.concat(buffers);
             const base64PDF = pdfBuffer.toString('base64');
 
             await axios.post('https://api.brevo.com/v3/smtp/email', {
-                sender: { name: "Rilievo App", email: "arredoinfissitorino@gmail.com" },
+                sender: { name: "App Rilievi", email: "arredoinfissitorino@gmail.com" },
                 to: [{ email: "arredoinfissitorino@gmail.com" }],
-                subject: "Nuovo Rilievo: " + (data.cliente_nome || "Senza Nome"),
-                textContent: "In allegato il PDF del rilievo.",
+                subject: "Rilievo: " + (data.cliente_nome || "Senza Nome"),
+                textContent: "In allegato il rilievo tecnico di " + (data.cliente_nome || "N/A"),
                 attachment: [{ content: base64PDF, name: "Rilievo_" + (data.cliente_nome || "cliente") + ".pdf" }]
             }, {
                 headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' }
@@ -171,10 +137,7 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
             if (!res.headersSent) res.status(500).send("Errore nell'invio dell'email.");
         }
     });
-
-}); // <--- QUESTA chiude app.post('/invia', ...)
+});
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, function() { 
-    console.log('Server attivo sulla porta: ' + PORT); 
-});
+app.listen(PORT, () => console.log('Server attivo sulla porta: ' + PORT));
