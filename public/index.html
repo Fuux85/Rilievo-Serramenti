@@ -551,9 +551,16 @@ function creaSerramento(){
     wrapper.style.border="1px solid #ccc";
     wrapper.style.padding="15px";
     wrapper.style.marginBottom="20px";
+    wrapper.style.position="relative"; // Necessario per posizionare bene il tasto X
 
     wrapper.innerHTML=`
-    <h3>Serramento ${serramentoCount}</h3>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <h3 style="margin: 0;">Serramento ${serramentoCount}</h3>
+        <button type="button" onclick="this.closest('div.serramento-wrapper').remove()" 
+                style="background-color: #dc3545; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                Elimina X
+        </button>
+    </div>
     <div class="flex-row">
         <div style="flex:1; min-width:280px;">
             <label>Schema Serramento</label>
@@ -585,6 +592,10 @@ function creaSerramento(){
             <textarea name="note[]" rows="2"></textarea>
         </div>
     </div>`;
+
+    // Aggiungiamo una classe per facilitare la rimozione
+    wrapper.className = "serramento-wrapper";
+    
     container.appendChild(wrapper);
     setupCanvas(document.getElementById("canvasS"+serramentoCount));
 }
