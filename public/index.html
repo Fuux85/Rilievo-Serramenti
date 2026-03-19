@@ -757,16 +757,16 @@ async function generaPdfLocale(){
         }
     });
 
-    // aggiungo i serramenti
-    if(serramentoCount>0){
+// aggiungo i serramenti/porte/accessori
+    const elementiDinamici = document.querySelectorAll('.serramento-wrapper');
+    if(elementiDinamici.length > 0){
         pdf.addPage();
-        pdf.text('Serramenti',10,10);
-        for(let i=1;i<=serramentoCount;i++){
-            const tipo = document.querySelector(`[name="tipo_serramento[]"]`).value;
-            // semplificato
-            pdf.text(`Serramento ${i}`, 10, 20 + (i-1)*6);
+        pdf.text('Elementi Rilevati', 10, 10);
+        elementiDinamici.forEach((blocco, i) => {
+            const titolo = blocco.querySelector('.titolo-dinamico').textContent;
+            pdf.text(titolo, 10, 20 + (i * 10));
+        });
         }
-    }
 
     const blob = pdf.output('blob');
     if(navigator.share && navigator.canShare && navigator.canShare({files:[new File([blob],'rilievo.pdf',{type:'application/pdf'})]})){
