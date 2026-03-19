@@ -300,14 +300,26 @@ alt="Arredoinfissi Torino" class="logo">
 <!-- STEP 4 -->
 <div class="step" id="step4">
 <fieldset>
-<legend>Rilievo Misure e Dettagli</legend>
+<legend id="titoloPercorso">Rilievo Misure e Dettagli</legend>
 
-<div id="serramentiContainer"></div>
+    <div id="container_serramenti" class="path-container" style="display:none;">
+        <div class="items-list"></div>
+        <button type="button" class="btn-aggiungi" onclick="creaElemento('serramenti')">+ Aggiungi Serramento</button>
+    </div>
 
-<button type="button" class="btn-aggiungi" onclick="creaSerramento()">+ Aggiungi Serramento</button>
+    <div id="container_porte" class="path-container" style="display:none;">
+        <div class="items-list"></div>
+        <button type="button" class="btn-aggiungi" onclick="creaElemento('porte')">+ Aggiungi Porta</button>
+    </div>
+
+    <div id="container_accessori" class="path-container" style="display:none;">
+        <div class="items-list"></div>
+        <button type="button" class="btn-aggiungi" onclick="creaElemento('accessori')">+ Aggiungi Accessorio</button>
+    </div>
+
 <br><br>
 <button type="button" id="backBtnStep4" onclick="showStep('step3')">Indietro</button>
-<button type="button" onclick="nextStep4()">Avanti</button>
+<button type="button" onclick="showStep('step5')">Avanti</button>
 
 </fieldset>
 </div>
@@ -395,11 +407,22 @@ function nextStep1(){
 
 function selectPath(choice) {
     selectedPath = choice;
+    // Nascondiamo tutto prima di mostrare il percorso scelto
+    document.getElementById('container_serramenti').style.display = 'none';
+    document.getElementById('container_porte').style.display = 'none';
+    document.getElementById('container_accessori').style.display = 'none';
+
     if (choice === 'Serramenti ed Accessori') {
+        document.getElementById('container_serramenti').style.display = 'block';
         document.getElementById('backBtnStep4').setAttribute('onclick', "showStep('step3')");
+        // Se è vuoto, creiamo il primo
+        if(document.querySelector('#container_serramenti .items-list').children.length === 0) creaElemento('serramenti');
         showStep('step3');
     } else {
+        const tipo = (choice === 'Accessori Liberi') ? 'accessori' : 'porte';
+        document.getElementById('container_' + tipo).style.display = 'block';
         document.getElementById('backBtnStep4').setAttribute('onclick', "showStep('step2')");
+        if(document.querySelector('#container_' + tipo + ' .items-list').children.length === 0) creaElemento(tipo);
         showStep('step4');
     }
 }
@@ -563,59 +586,42 @@ function undoCanvas(id){ document.getElementById(id).undoLast(); }
 });
 
 /* Serramenti dinamici con numerazione intelligente */
-function creaSerramento() {
-    const container = document.getElementById("serramentiContainer");
-    
-    // Contiamo quanti ne esistono già per dare il numero iniziale
+function creaElemento(tipo) {
+    const container = document.querySelector(`#container_${tipo} .items-list`);
     const numeroAttuale = container.getElementsByClassName('serramento-wrapper').length + 1;
+    const canvasId = "canvas_" + tipo + "_" + Date.now();
+    
+    let labelTitolo = (tipo === 'serramenti') ? "Serramento" : (tipo === 'porte' ? "Porta" : "Accessorio");
+    let namePrefix = (tipo === 'serramenti') ? "" : tipo + "_"; // Mantiene compatibilità col vecchio server per i serramenti
 
     const wrapper = document.createElement("div");
     wrapper.className = "serramento-wrapper";
-    wrapper.style.border = "1px solid #ccc";
-    wrapper.style.padding = "15px";
-    wrapper.style.marginBottom = "20px";
-    wrapper.style.position = "relative";
-
-    // Generiamo un ID unico per il canvas basato sul tempo, così non si sovrappongono mai
-    const canvasId = "canvas_" + Date.now();
+    wrapper.style = "border:1px solid #ccc; padding:15px; margin-bottom:20px; position:relative; background:#fdfdfd;";
 
     wrapper.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-        <h3 class="titolo-serramento" style="margin: 0;">Serramento ${numeroAttuale}</h3>
-        <button type="button" onclick="rimuoviERinomina(this)" 
+        <h3 class="titolo-dinamico" style="margin: 0;">${labelTitolo} ${numeroAttuale}</h3>
+        <button type="button" onclick="rimuoviERinomina(this, '${tipo}', '${labelTitolo}')" 
                 style="background-color: #dc3545; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">
                 Elimina X
         </button>
     </div>
     <div class="flex-row">
         <div style="flex:1; min-width:280px;">
-            <label>Schema Serramento</label>
+            <label>Schema</label>
             <canvas id="${canvasId}"></canvas>
-            <button type="button" onclick="undoCanvas('${canvasId}')">Annulla ultima linea</button>
-            <button type="button" onclick="clearCanvas('${canvasId}')">Pulisci Disegno</button>
+            <button type="button" onclick="undoCanvas('${canvasId}')">Annulla linea</button>
+            <button type="button" onclick="clearCanvas('${canvasId}')">Pulisci</button>
         </div>
         <div style="flex:1; min-width:280px;">
-            <label>Tipologia*</label>
-            <select name="tipo_serramento[]" required>
-                <option value="">Seleziona</option>
-                <option>Porta-Finestra</option>
-                <option>Finestra</option>
-                <option>Altro</option>
-            </select>
-            <label>Nome Serramento*</label>
-            <input type="text" name="nome_serramento[]" required>
+            <label>Nome/Modello*</label>
+            <input type="text" name="${namePrefix}nome[]" required>
             <label>Larghezza (mm)*</label>
-            <input type="number" name="larghezza[]" required>
+            <input type="number" name="${namePrefix}larghezza[]" required>
             <label>Altezza (mm)*</label>
-            <input type="number" name="altezza[]" required>
-            <label>Senso apertura</label>
-            <input type="text" name="apertura[]">
-            <label>Tipologia vetro</label>
-            <input type="text" name="vetro[]">
-            <label>Contatti magnetici</label>
-            <input type="text" name="contatti[]">
+            <input type="number" name="${namePrefix}altezza[]" required>
             <label>Note</label>
-            <textarea name="note[]" rows="2"></textarea>
+            <textarea name="${namePrefix}note[]" rows="2"></textarea>
         </div>
     </div>`;
     
@@ -623,27 +629,15 @@ function creaSerramento() {
     setupCanvas(document.getElementById(canvasId));
 }
 
-// Questa funzione elimina il blocco e sistema i numeri di quelli rimasti
-function rimuoviERinomina(bottone) {
-    const bloccoDaEliminare = bottone.closest('.serramento-wrapper');
-    const container = document.getElementById("serramentiContainer");
-    
-    bloccoDaEliminare.remove();
-
-    // Ricalcoliamo i titoli per tutti i blocchi superstiti
-    const blocchiRimasti = container.getElementsByClassName('serramento-wrapper');
-    Array.from(blocchiRimasti).forEach((blocco, indice) => {
-        const nuovoNumero = indice + 1;
-        const titolo = blocco.querySelector('.titolo-serramento');
-        if (titolo) {
-            titolo.textContent = "Serramento " + nuovoNumero;
-        }
+function rimuoviERinomina(bottone, tipo, etichetta) {
+    const container = document.querySelector(`#container_${tipo} .items-list`);
+    bottone.closest('.serramento-wrapper').remove();
+    const rimasti = container.getElementsByClassName('serramento-wrapper');
+    Array.from(rimasti).forEach((blocco, i) => {
+        blocco.querySelector('.titolo-dinamico').textContent = `${etichetta} ${i + 1}`;
     });
 }
-
-// Avvio automatico del primo serramento
-creaSerramento();
-
+    
 let fotoCount = 0;
 
 function aggiungiFoto() {
@@ -700,17 +694,15 @@ document.getElementById('rilievoForm').addEventListener('submit', async function
 
     const formData = new FormData(form);
 
-    // 1. Raccogliamo i 4 schemi di posa principali
+    // Raccogliamo i 4 schemi fissi (Posa A, B, C, D)
     ['canvasA','canvasB','canvasC','canvasD'].forEach(id => {
         const c = document.getElementById(id);
-        if(c){
-            formData.append(id, c.toDataURL('image/png'));
-        }
+        if(c) formData.append(id, c.toDataURL('image/png'));
     });
 
-    // 2. Raccogliamo i disegni di ogni singolo serramento aggiunto
-    const canvasSerramenti = document.querySelectorAll('canvas[id^="canvasS"]');
-    canvasSerramenti.forEach(c => {
+    // Raccogliamo TUTTI i canvas dei serramenti/porte/accessori (quelli con l'ID che inizia per canvas_)
+    const tuttiICanvasDinamici = document.querySelectorAll('canvas[id^="canvas_"]');
+    tuttiICanvasDinamici.forEach(c => {
         formData.append(c.id, c.toDataURL('image/png'));
     });
 
