@@ -562,22 +562,27 @@ function undoCanvas(id){ document.getElementById(id).undoLast(); }
     setupCanvas(document.getElementById(id));
 });
 
-/* Serramenti dinamici invariati */
-let serramentoCount=0;
+/* Serramenti dinamici con numerazione intelligente */
+function creaSerramento() {
+    const container = document.getElementById("serramentiContainer");
+    
+    // Contiamo quanti ne esistono già per dare il numero iniziale
+    const numeroAttuale = container.getElementsByClassName('serramento-wrapper').length + 1;
 
-function creaSerramento(){
-    serramentoCount++;
-    const container=document.getElementById("serramentiContainer");
-    const wrapper=document.createElement("div");
-    wrapper.style.border="1px solid #ccc";
-    wrapper.style.padding="15px";
-    wrapper.style.marginBottom="20px";
-    wrapper.style.position="relative"; // Necessario per posizionare bene il tasto X
+    const wrapper = document.createElement("div");
+    wrapper.className = "serramento-wrapper";
+    wrapper.style.border = "1px solid #ccc";
+    wrapper.style.padding = "15px";
+    wrapper.style.marginBottom = "20px";
+    wrapper.style.position = "relative";
 
-    wrapper.innerHTML=`
+    // Generiamo un ID unico per il canvas basato sul tempo, così non si sovrappongono mai
+    const canvasId = "canvas_" + Date.now();
+
+    wrapper.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-        <h3 style="margin: 0;">Serramento ${serramentoCount}</h3>
-        <button type="button" onclick="this.closest('div.serramento-wrapper').remove()" 
+        <h3 class="titolo-serramento" style="margin: 0;">Serramento ${numeroAttuale}</h3>
+        <button type="button" onclick="rimuoviERinomina(this)" 
                 style="background-color: #dc3545; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">
                 Elimina X
         </button>
@@ -585,9 +590,9 @@ function creaSerramento(){
     <div class="flex-row">
         <div style="flex:1; min-width:280px;">
             <label>Schema Serramento</label>
-            <canvas id="canvasS${serramentoCount}"></canvas>
-            <button type="button" onclick="undoCanvas('canvasS${serramentoCount}')">Annulla ultima linea</button>
-            <button type="button" onclick="clearCanvas('canvasS${serramentoCount}')">Pulisci Disegno</button>
+            <canvas id="${canvasId}"></canvas>
+            <button type="button" onclick="undoCanvas('${canvasId}')">Annulla ultima linea</button>
+            <button type="button" onclick="clearCanvas('${canvasId}')">Pulisci Disegno</button>
         </div>
         <div style="flex:1; min-width:280px;">
             <label>Tipologia*</label>
@@ -613,14 +618,30 @@ function creaSerramento(){
             <textarea name="note[]" rows="2"></textarea>
         </div>
     </div>`;
-
-    // Aggiungiamo una classe per facilitare la rimozione
-    wrapper.className = "serramento-wrapper";
     
     container.appendChild(wrapper);
-    setupCanvas(document.getElementById("canvasS"+serramentoCount));
+    setupCanvas(document.getElementById(canvasId));
 }
 
+// Questa funzione elimina il blocco e sistema i numeri di quelli rimasti
+function rimuoviERinomina(bottone) {
+    const bloccoDaEliminare = bottone.closest('.serramento-wrapper');
+    const container = document.getElementById("serramentiContainer");
+    
+    bloccoDaEliminare.remove();
+
+    // Ricalcoliamo i titoli per tutti i blocchi superstiti
+    const blocchiRimasti = container.getElementsByClassName('serramento-wrapper');
+    Array.from(blocchiRimasti).forEach((blocco, indice) => {
+        const nuovoNumero = indice + 1;
+        const titolo = blocco.querySelector('.titolo-serramento');
+        if (titolo) {
+            titolo.textContent = "Serramento " + nuovoNumero;
+        }
+    });
+}
+
+// Avvio automatico del primo serramento
 creaSerramento();
 
 let fotoCount = 0;
