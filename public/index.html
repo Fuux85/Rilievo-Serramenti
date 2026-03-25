@@ -816,36 +816,49 @@ document.getElementById('rilievoForm').addEventListener('submit', async function
     btn.textContent = "Invio in corso... attendi...";
     btn.disabled = true;
 
-// Creiamo il FormData base dal modulo
     const formData = new FormData(form);
 
-    // ✅ FORZATURA 1 CORRETTA: Usiamo .set() per non raddoppiare i dati!
-    const campiDinamici = form.querySelectorAll('input[name*="[]"], textarea[name*="[]"]');
-    campiDinamici.forEach(input => {
-        if (input.value) {
-            formData.set(input.name, input.value); // Usa .set() al posto di .append()!
+    // 🔥 FORZATURA 1: Leggiamo i testi dinamici uno per uno prendendoli dal modulo!
+    const tuttiInput = form.querySelectorAll('input[type="text"], input[type="number"], textarea');
+    tuttiInput.forEach(input => {
+        if(input.name && input.value) {
+            // Se è un campo con le parentesi [] lo sovrascriviamo per essere sicuri che non si perda
+            if(input.name.includes('[]')) {
+                // Raccogliamo tutti i valori dello stesso nome in un array
+                const valoriDelloStessoNome = Array.from(form.querySelectorAll(`[name="${input.name}"]`)).map(i => i.value);
+                
+                // Puliamo i vecchi valori duplicati
+                formData.delete(input.name); 
+                
+                // Li inseriamo uno alla volta puliti
+                valoriDelloStessoNome.forEach(v => {
+                    formData.append(input.name, v);
+                });
+            } else {
+                formData.set(input.name, input.value);
+            }
         }
     });
 
-    // ✅ FORZATURA 2 CORRETTA: Recupero manuale dei Canvas
+    // 🔥 FORZATURA 2: Leggiamo tutti i Canvas dei serramenti disegnati
     const canvasDinamici = document.querySelectorAll('canvas[id^="canvas_"]');
     canvasDinamici.forEach(canvas => {
         try {
             const imgData = canvas.toDataURL('image/png');
             if (imgData.length > 1000) { 
-                formData.set(canvas.id, imgData); // Usa .set() anche qui!
+                formData.set(canvas.id, imgData); // Lo salviamo nel pacco con il suo ID unico!
             }
         } catch (err) {
             console.warn("Errore lettura canvas dinamico:", err);
         }
     });
 
-    // Recupero dei 4 schemi fissi (A, B, C, D)
+    // Raccogliamo i 4 schemi fissi (A, B, C, D)
     ['canvasA','canvasB','canvasC','canvasD'].forEach(id => {
         const c = document.getElementById(id);
         if(c) {
             const img = c.toDataURL('image/png');
-            if(img.length > 1000) formData.append(id, img);
+            if(img.length > 1000) formData.set(id, img);
         }
     });
 
@@ -861,7 +874,7 @@ document.getElementById('rilievoForm').addEventListener('submit', async function
         
     } catch(err) {
         console.error('Errore invio:', err);
-        alert('Errore di connessione. Uso il salvataggio locale (jsPDF).');
+        alert('Errore di connessione. Uso il salvataggio locale.');
         generaPdfLocale();
     } finally {
         btn.textContent = originalText;
