@@ -63,43 +63,48 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
         }
     });
 
-    // 3. GESTIONE ELEMENTI DINAMICI
-    const toArray = (val) => Array.isArray(val) ? val : (val ? [val] : []);
+// 3. GESTIONE ELEMENTI DINAMICI
+const toArray = (val) => Array.isArray(val) ? val : (val ? [val] : []);
 
-    const scriviSezione = (titoloSezione, prefix) => {
-        const nomi = toArray(data[prefix + 'nome[]']);
-        const largh = toArray(data[prefix + 'larghezza[]']);
-        const alt = toArray(data[prefix + 'altezza[]']);
-        const note = toArray(data[prefix + 'note[]']);
+const scriviSezione = (titoloSezione, prefix) => {
+    const nomi = toArray(data[prefix + 'nome[]']);
+    const largh = toArray(data[prefix + 'larghezza[]']);
+    const alt = toArray(data[prefix + 'altezza[]']);
+    const note = toArray(data[prefix + 'note[]']);
 
-        if (nomi.length > 0) {
-            doc.addPage();
-            doc.fontSize(16).font('Helvetica-Bold').text(titoloSezione, { underline: true });
-            
-            nomi.forEach((nome, idx) => {
-                doc.moveDown();
-                doc.fontSize(12).font('Helvetica-Bold').text(`${titoloSezione.toUpperCase()} ${idx + 1}: ${nome || 'N/D'}`);
-                doc.fontSize(10).font('Helvetica');
-                doc.text(`Misure: ${largh[idx] || '?'} x ${alt[idx] || '?'} mm`);
-                if (note[idx]) doc.text(`Note: ${note[idx]}`);
+    // Forziamo la creazione della pagina nel PDF
+    doc.addPage();
+    doc.fontSize(16).font('Helvetica-Bold').text(titoloSezione, { underline: true });
+    doc.moveDown();
 
-                const tuttiCanvasSezione = Object.keys(data).filter(k => k.startsWith('canvas_' + (prefix === '' ? 'serramenti' : prefix.replace('_',''))));
-                const mioCanvas = tuttiCanvasSezione[idx];
+    // Se non ci sono elementi, il PDF ce lo dirà chiaramente!
+    if (nomi.length === 0) {
+        doc.fontSize(12).font('Helvetica').text("Nessun elemento inserito o rilevato per questa sezione.");
+    } else {
+        nomi.forEach((nome, idx) => {
+            doc.moveDown();
+            doc.fontSize(12).font('Helvetica-Bold').text(`${titoloSezione.toUpperCase()} ${idx + 1}: ${nome || 'N/D'}`);
+            doc.fontSize(10).font('Helvetica');
+            doc.text(`Misure: ${largh[idx] || '?'} x ${alt[idx] || '?'} mm`);
+            if (note[idx]) doc.text(`Note: ${note[idx]}`);
 
-                if (mioCanvas && data[mioCanvas] && data[mioCanvas].includes('base64')) {
-                    try {
-                        const base64 = data[mioCanvas].replace(/^data:image\/png;base64,/, '');
-                        doc.image(Buffer.from(base64, 'base64'), { width: 250 });
-                    } catch (e) { console.log("Errore disegno " + prefix, e.message); }
-                }
-                doc.text('--------------------------------------------------');
-            });
-        }
-    };
+            const tuttiCanvasSezione = Object.keys(data).filter(k => k.startsWith('canvas_' + (prefix === '' ? 'serramenti' : prefix.replace('_',''))));
+            const mioCanvas = tuttiCanvasSezione[idx];
 
-    scriviSezione('Serramenti', '');
-    scriviSezione('Porte', 'porte_');
-    scriviSezione('Accessori', 'accessori_');
+            if (mioCanvas && data[mioCanvas] && data[mioCanvas].includes('base64')) {
+                try {
+                    const base64 = data[mioCanvas].replace(/^data:image\/png;base64,/, '');
+                    doc.image(Buffer.from(base64, 'base64'), { width: 250 });
+                } catch (e) { console.log("Errore disegno " + prefix, e.message); }
+            }
+            doc.text('--------------------------------------------------');
+        });
+    }
+};
+
+scriviSezione('Serramenti', '');
+scriviSezione('Porte', 'porte_');
+scriviSezione('Accessori', 'accessori_');
 
     // 4. FOTO CANTIERE
     if (files && files.length > 0) {
