@@ -706,17 +706,28 @@ function creaElemento(tipo) {
     const numeroAttuale = container.getElementsByClassName('serramento-wrapper').length + 1;
     const canvasId = "canvas_" + tipo + "_" + Date.now();
     
-    let labelTitolo = (tipo === 'serramenti') ? "Serramento" : (tipo === 'porte' ? "Porta" : "Accessorio");
-    let namePrefix = (tipo === 'serramenti') ? "" : tipo + "_"; // Mantiene compatibilità col vecchio server per i serramenti
+    let labelTitolo = "Elemento";
+    let prefissoNomi = ""; 
+
+    if (tipo === 'serramenti') {
+        labelTitolo = "Serramento";
+        prefissoNomi = ""; 
+    } else if (tipo === 'porte') {
+        labelTitolo = "Porta";
+        prefissoNomi = "porte_";
+    } else if (tipo === 'accessori') {
+        labelTitolo = "Accessorio";
+        prefissoNomi = "accessori_";
+    }
 
     const wrapper = document.createElement("div");
     wrapper.className = "serramento-wrapper";
     wrapper.style = "border:1px solid #ccc; padding:15px; margin-bottom:20px; position:relative; background:#fdfdfd;";
 
-wrapper.innerHTML = `
+    wrapper.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
         <h3 class="titolo-dinamico" style="margin: 0;">${labelTitolo} ${numeroAttuale}</h3>
-        <input type="hidden" name="${namePrefix}canvas_id[]" value="${canvasId}">      
+        <input type="hidden" name="${prefissoNomi}canvas_id[]" value="${canvasId}">      
         <button type="button" onclick="rimuoviERinomina(this, '${tipo}', '${labelTitolo}')" 
                 style="background-color: #dc3545; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top:0 !important;">
                 Elimina X
@@ -740,13 +751,13 @@ wrapper.innerHTML = `
         
         <div style="flex:1; min-width:280px;">
             <label>Nome/Modello*</label>
-            <input type="text" name="${namePrefix}nome[]" required>
+            <input type="text" name="${prefissoNomi}nome[]" required>
             <label>Larghezza (mm)*</label>
-            <input type="number" name="${namePrefix}larghezza[]" required>
+            <input type="number" name="${prefissoNomi}larghezza[]" required>
             <label>Altezza (mm)*</label>
-            <input type="number" name="${namePrefix}altezza[]" required>
+            <input type="number" name="${prefissoNomi}altezza[]" required>
             <label>Note</label>
-            <textarea name="${namePrefix}note[]" rows="2"></textarea>
+            <textarea name="${prefissoNomi}note[]" rows="2"></textarea>
         </div>
     </div>`;
     
