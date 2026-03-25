@@ -716,6 +716,7 @@ function creaElemento(tipo) {
 wrapper.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
         <h3 class="titolo-dinamico" style="margin: 0;">${labelTitolo} ${numeroAttuale}</h3>
+        <input type="hidden" name="${namePrefix}canvas_id[]" value="${canvasId}">      
         <button type="button" onclick="rimuoviERinomina(this, '${tipo}', '${labelTitolo}')" 
                 style="background-color: #dc3545; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top:0 !important;">
                 Elimina X
