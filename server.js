@@ -71,13 +71,14 @@ const scriviSezione = (titoloSezione, prefix) => {
     const largh = toArray(data[prefix + 'larghezza[]']);
     const alt = toArray(data[prefix + 'altezza[]']);
     const note = toArray(data[prefix + 'note[]']);
+    
+    // 🏷️ Leggiamo l'etichetta (ID) del disegno dal modulo
+    const canvasIds = toArray(data[prefix + 'canvas_id[]']); 
 
-    // Forziamo la creazione della pagina nel PDF
     doc.addPage();
     doc.fontSize(16).font('Helvetica-Bold').text(titoloSezione, { underline: true });
     doc.moveDown();
 
-    // Se non ci sono elementi, il PDF ce lo dirà chiaramente!
     if (nomi.length === 0) {
         doc.fontSize(12).font('Helvetica').text("Nessun elemento inserito o rilevato per questa sezione.");
     } else {
@@ -88,12 +89,12 @@ const scriviSezione = (titoloSezione, prefix) => {
             doc.text(`Misure: ${largh[idx] || '?'} x ${alt[idx] || '?'} mm`);
             if (note[idx]) doc.text(`Note: ${note[idx]}`);
 
-            const tuttiCanvasSezione = Object.keys(data).filter(k => k.startsWith('canvas_' + (prefix === '' ? 'serramenti' : prefix.replace('_',''))));
-            const mioCanvas = tuttiCanvasSezione[idx];
+            // 🎯 Cerchiamo il disegno esatto usando l'ID dell'etichetta!
+            const mioCanvasId = canvasIds[idx]; 
 
-            if (mioCanvas && data[mioCanvas] && data[mioCanvas].includes('base64')) {
+            if (mioCanvasId && data[mioCanvasId] && data[mioCanvasId].includes('base64')) {
                 try {
-                    const base64 = data[mioCanvas].replace(/^data:image\/png;base64,/, '');
+                    const base64 = data[mioCanvasId].replace(/^data:image\/png;base64,/, '');
                     doc.image(Buffer.from(base64, 'base64'), { width: 250 });
                 } catch (e) { console.log("Errore disegno " + prefix, e.message); }
             }
@@ -102,6 +103,7 @@ const scriviSezione = (titoloSezione, prefix) => {
     }
 };
 
+// Queste tre righe applicano la regola a tutte e tre le sezioni in un colpo solo!
 scriviSezione('Serramenti', '');
 scriviSezione('Porte', 'porte_');
 scriviSezione('Accessori', 'accessori_');
