@@ -817,6 +817,8 @@ aggiungiFoto();
 // possiamo espandere il codice per generare un PDF lato client usando
 // jsPDF/html2pdf se si vuole lavorare offline.
 
+// === SOSTITUISCI DA QUI FINO ALLA FINE DEL FILE ===
+
 document.getElementById('rilievoForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
@@ -827,28 +829,72 @@ document.getElementById('rilievoForm').addEventListener('submit', async function
     btn.textContent = "Invio in corso... attendi...";
     btn.disabled = true;
 
-    // Crea il FormData prendendo i dati reali compilati sullo schermo!
-    const formData = new FormData(form);
+    // Creiamo un pacco vuoto da zero (molto più sicuro per gli smartphone!)
+    const formData = new FormData();
 
-    // 1. Raccogliamo i disegni Canvas Dinamici
-    const canvasDinamici = document.querySelectorAll('canvas[id^="canvas_"]');
-    canvasDinamici.forEach(canvas => {
+    // 1. Leggiamo i dati base del cantiere (Step 1)
+    const campiBase = [
+        'data_rilievo', 'tecnico_incaricato', 'cliente_nome', 'venditore', 
+        'indirizzo_cliente', 'piano', 'note_cantiere'
+    ];
+    campiBase.forEach(id => {
+        const el = form.querySelector(`[name="${id}"]`);
+        if(el) formData.append(id, el.value);
+    });
+
+    // Radio button
+    ['autoscala', 'occupazione_suolo', 'ascensore', 'ztl'].forEach(nome => {
+        const checked = form.querySelector(`input[name="${nome}"]:checked`);
+        if(checked) formData.append(nome, checked.value);
+    });
+
+    // 2. Leggiamo i Serramenti Dinamici uno per uno (La Cucina!)
+    const sezioni = [
+        { prefisso: '', label: 'Serramenti' },
+        { prefisso: 'porte_', label: 'Porte' },
+        { prefisso: 'accessori_', label: 'Accessori' }
+    ];
+
+    sezioni.forEach(sz => {
+        const wrapper = document.querySelectorAll('.serramento-wrapper');
+        
+        wrapper.forEach(blocco => {
+            // Controlliamo se questo blocco appartiene a questa sezione controllando il nome dell'input
+            const inputNome = blocco.querySelector(`input[name="${sz.prefisso}nome[]"]`);
+            if (inputNome && inputNome.value.trim() !== "") {
+                formData.append(`${sz.prefisso}nome[]`, inputNome.value);
+                
+                const l = blocco.querySelector(`input[name="${sz.prefisso}larghezza[]"]`);
+                formData.append(`${sz.prefisso}larghezza[]`, l ? l.value : "");
+
+                const a = blocco.querySelector(`input[name="${sz.prefisso}altezza[]"]`);
+                formData.append(`${sz.prefisso}altezza[]`, a ? a.value : "");
+
+                const n = blocco.querySelector(`textarea[name="${sz.prefisso}note[]"]`);
+                formData.append(`${sz.prefisso}note[]`, n ? n.value : "");
+
+                const cid = blocco.querySelector(`input[name="${sz.prefisso}canvas_id[]"]`);
+                if(cid) formData.append(`${sz.prefisso}canvas_id[]`, cid.value);
+            }
+        });
+    });
+
+    // 3. Leggiamo i Disegni (Canvas)
+    const tuttiCanvas = document.querySelectorAll('canvas');
+    tuttiCanvas.forEach(canvas => {
         try {
             const imgData = canvas.toDataURL('image/png');
             if (imgData.length > 1000) { 
-                formData.set(canvas.id, imgData); 
+                formData.append(canvas.id, imgData); 
             }
-        } catch (err) {
-            console.warn("Errore lettura canvas dinamico:", err);
-        }
+        } catch (err) { console.warn("Errore canvas:", err); }
     });
 
-    // 2. Raccogliamo i 4 schemi fissi (A, B, C, D)
-    ['canvasA','canvasB','canvasC','canvasD'].forEach(id => {
-        const c = document.getElementById(id);
-        if(c) {
-            const img = c.toDataURL('image/png');
-            if(img.length > 1000) formData.set(id, img);
+    // 4. Leggiamo le Foto scattate
+    const inputFoto = document.querySelectorAll('input[name="foto[]"]');
+    inputFoto.forEach(input => {
+        if(input.files && input.files[0]) {
+            formData.append('foto[]', input.files[0]); // Rimette le foto nel faldone!
         }
     });
 
@@ -856,7 +902,7 @@ document.getElementById('rilievoForm').addEventListener('submit', async function
         const url = form.action || '/invia';
         const resp = await fetch(url, {
             method: 'POST',
-            body: formData
+            body: formData // Spedisce il faldone compilato a mano!
         });
         
         const resultText = await resp.text();
@@ -872,9 +918,7 @@ document.getElementById('rilievoForm').addEventListener('submit', async function
     }
 });
 
-// ---------- funzione di supporto per generare PDF lato client ----------
 async function generaPdfLocale(){
-    // usa jsPDF (includere la libreria in head via CDN)
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({unit:'mm', format:'a4'});
     let y = 10;
@@ -889,7 +933,6 @@ async function generaPdfLocale(){
         y += 6;
     });
 
-    // aggiungo i canvas principali
     ['canvasA','canvasB','canvasC','canvasD'].forEach(id=>{
         const c = document.getElementById(id);
         if(c){
@@ -899,7 +942,6 @@ async function generaPdfLocale(){
         }
     });
 
-// aggiungo i serramenti/porte/accessori
     const elementiDinamici = document.querySelectorAll('.serramento-wrapper');
     if(elementiDinamici.length > 0){
         pdf.addPage();
@@ -908,7 +950,7 @@ async function generaPdfLocale(){
             const titolo = blocco.querySelector('.titolo-dinamico').textContent;
             pdf.text(titolo, 10, 20 + (i * 10));
         });
-        }
+    }
 
     const blob = pdf.output('blob');
     if(navigator.share && navigator.canShare && navigator.canShare({files:[new File([blob],'rilievo.pdf',{type:'application/pdf'})]})){
@@ -921,12 +963,8 @@ async function generaPdfLocale(){
             return;
         } catch(e){ console.warn('Condivisione fallita',e); }
     }
-    // fallback: scarica il file
     pdf.save('rilievo.pdf');
 }
-
 </script>
-
-
 </body>
 </html>
