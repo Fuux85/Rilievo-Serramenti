@@ -103,10 +103,10 @@ const scriviSezione = (titoloSezione, prefix) => {
     }
 };
 
-// Queste tre righe applicano la regola a tutte e tre le sezioni in un colpo solo!
-scriviSezione('Serramenti', '');
-scriviSezione('Porte', 'porte_');
-scriviSezione('Accessori', 'accessori_');
+// Incolla queste 3 righe esatte in fondo alla funzione nel tuo server.js!
+scriviSezione('Serramenti ed Accessori', '');
+scriviSezione('Porte Blindate o Porte Interne', 'porte_');
+scriviSezione('Accessori Liberi', 'accessori_');
 
     // 4. FOTO CANTIERE
     if (files && files.length > 0) {
