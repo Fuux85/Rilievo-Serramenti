@@ -67,38 +67,46 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
 const toArray = (val) => Array.isArray(val) ? val : (val ? [val] : []);
 
 const scriviSezione = (titoloSezione, prefix) => {
-    // Cerchiamo sia con le parentesi quadre [] sia senza (molto più sicuro!)
-    const nomi = toArray(data[prefix + 'nome[]'] || data[prefix + 'nome']);
-    const largh = toArray(data[prefix + 'larghezza[]'] || data[prefix + 'larghezza']);
-    const alt = toArray(data[prefix + 'altezza[]'] || data[prefix + 'altezza']);
-    const note = toArray(data[prefix + 'note[]'] || data[prefix + 'note']);
-    const canvasIds = toArray(data[prefix + 'canvas_id[]'] || data[prefix + 'canvas_id']); 
+    const nomiRaw = data[prefix + 'nome[]'] || data[prefix + 'nome'];
+    const nomi = toArray(nomiRaw);
 
     doc.addPage();
     doc.fontSize(16).font('Helvetica-Bold').text(titoloSezione, { underline: true });
     doc.moveDown();
 
-    if (nomi.length === 0) {
+    if (nomi.length === 0 || (nomi.length === 1 && !nomi[0])) {
         doc.fontSize(12).font('Helvetica').text("Nessun elemento inserito o rilevato per questa sezione.");
-    } else {
-        nomi.forEach((nome, idx) => {
-            doc.moveDown();
-            doc.fontSize(12).font('Helvetica-Bold').text(`${titoloSezione.toUpperCase()} ${idx + 1}: ${nome || 'N/D'}`);
-            doc.fontSize(10).font('Helvetica');
-            doc.text(`Misure: ${largh[idx] || '?'} x ${alt[idx] || '?'} mm`);
-            if (note[idx]) doc.text(`Note: ${note[idx]}`);
-
-            const mioCanvasId = canvasIds[idx]; 
-
-            if (mioCanvasId && data[mioCanvasId] && data[mioCanvasId].includes('base64')) {
-                try {
-                    const base64 = data[mioCanvasId].replace(/^data:image\/png;base64,/, '');
-                    doc.image(Buffer.from(base64, 'base64'), { width: 250 });
-                } catch (e) { console.log("Errore disegno " + prefix, e.message); }
-            }
-            doc.text('--------------------------------------------------');
-        });
+        return; 
     }
+
+    const largh = toArray(data[prefix + 'larghezza[]'] || data[prefix + 'larghezza']);
+    const alt = toArray(data[prefix + 'altezza[]'] || data[prefix + 'altezza']);
+    const note = toArray(data[prefix + 'note[]'] || data[prefix + 'note']);
+    const canvasIds = toArray(data[prefix + 'canvas_id[]'] || data[prefix + 'canvas_id']);
+
+    nomi.forEach((nome, idx) => {
+        if (!nome || nome.trim() === "") return; // Salta i moduli vuoti fantasma!
+
+        doc.moveDown();
+        doc.fontSize(12).font('Helvetica-Bold').text(`${titoloSezione.toUpperCase()}: ${nome}`);
+        doc.fontSize(10).font('Helvetica');
+        
+        const l = largh[idx] || '?';
+        const a = alt[idx] || '?';
+        const n = note[idx] || '';
+
+        doc.text(`Misure: ${l} x ${a} mm`);
+        if (n) doc.text(`Note: ${n}`);
+
+        const mioCanvasId = canvasIds[idx];
+        if (mioCanvasId && data[mioCanvasId] && data[mioCanvasId].includes('base64')) {
+            try {
+                const base64 = data[mioCanvasId].replace(/^data:image\/png;base64,/, '');
+                doc.image(Buffer.from(base64, 'base64'), { width: 250 });
+            } catch (e) { console.log("Errore disegno " + prefix, e.message); }
+        }
+        doc.text('--------------------------------------------------');
+    });
 };
 
 // ✅ CODICE CORRETTO: Mettiamo i titoli standard per il PDF usando i prefissi che l'HTML genera davvero!
