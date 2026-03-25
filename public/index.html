@@ -160,6 +160,60 @@ input[type="radio"][value="No"]:checked + span {
     background-color: #218838 !important;
 }
 /* --------------------------- */
+
+/* Barra degli strumenti sotto il canvas */
+.canvas-tools {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 5px;
+    margin-bottom: 20px;
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+}
+
+/* Gruppo di bottoni uniti */
+.btn-group {
+    display: flex;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid #ccc;
+}
+
+.btn-group button {
+    margin-top: 0 !important;
+    border: none;
+    border-radius: 0;
+    background: white;
+    padding: 8px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    border-right: 1px solid #ccc;
+}
+
+.btn-group button:last-child {
+    border-right: none;
+}
+
+/* Pulsante attivo (evidenziato in blu) */
+.btn-group button.active {
+    background-color: #007bff !important;
+    color: white !important;
+    font-weight: bold;
+}
+
+/* Pulsanti di utilità (Annulla, Pulisci) */
+.btn-utility {
+    margin-top: 0 !important;
+    padding: 8px 12px;
+    font-size: 14px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
     
 </style>
 </head>
@@ -273,23 +327,51 @@ alt="Arredoinfissi Torino" class="logo">
 
 <label>Posa A</label>
 <canvas id="canvasA"></canvas>
-<button type="button" onclick="undoCanvas('canvasA')">Annulla ultima linea</button>
-<button type="button" onclick="clearCanvas('canvasA')">Pulisci</button>
+<div class="canvas-tools" id="tools_canvasA">
+    <div class="btn-group">
+        <button type="button" class="active" onclick="setCanvasTool('canvasA', 'straight')">📏 Riga</button>
+        <button type="button" onclick="setCanvasTool('canvasA', 'curve')">✏️ Curva</button>
+        <button type="button" onclick="setCanvasTool('canvasA', 'text')">🔤 Testo</button>
+    </div>
+    <button type="button" class="btn-utility" onclick="undoCanvas('canvasA')">↩️ Annulla</button>
+    <button type="button" class="btn-utility" onclick="clearCanvas('canvasA')">🗑️ Pulisci</button>
+</div>
 
 <label>Posa B</label>
 <canvas id="canvasB"></canvas>
-<button type="button" onclick="undoCanvas('canvasB')">Annulla ultima linea</button>
-<button type="button" onclick="clearCanvas('canvasB')">Pulisci</button>
+<div class="canvas-tools" id="tools_canvasB">
+    <div class="btn-group">
+        <button type="button" class="active" onclick="setCanvasTool('canvasB', 'straight')">📏 Riga</button>
+        <button type="button" onclick="setCanvasTool('canvasB', 'curve')">✏️ Curva</button>
+        <button type="button" onclick="setCanvasTool('canvasB', 'text')">🔤 Testo</button>
+    </div>
+    <button type="button" class="btn-utility" onclick="undoCanvas('canvasB')">↩️ Annulla</button>
+    <button type="button" class="btn-utility" onclick="clearCanvas('canvasB')">🗑️ Pulisci</button>
+</div>
 
 <label>Posa C</label>
 <canvas id="canvasC"></canvas>
-<button type="button" onclick="undoCanvas('canvasC')">Annulla ultima linea</button>
-<button type="button" onclick="clearCanvas('canvasC')">Pulisci</button>
+<div class="canvas-tools" id="tools_canvasC">
+    <div class="btn-group">
+        <button type="button" class="active" onclick="setCanvasTool('canvasC', 'straight')">📏 Riga</button>
+        <button type="button" onclick="setCanvasTool('canvasC', 'curve')">✏️ Curva</button>
+        <button type="button" onclick="setCanvasTool('canvasC', 'text')">🔤 Testo</button>
+    </div>
+    <button type="button" class="btn-utility" onclick="undoCanvas('canvasC')">↩️ Annulla</button>
+    <button type="button" class="btn-utility" onclick="clearCanvas('canvasC')">🗑️ Pulisci</button>
+</div>
 
 <label>Posa D</label>
 <canvas id="canvasD"></canvas>
-<button type="button" onclick="undoCanvas('canvasD')">Annulla ultima linea</button>
-<button type="button" onclick="clearCanvas('canvasD')">Pulisci</button>
+<div class="canvas-tools" id="tools_canvasD">
+    <div class="btn-group">
+        <button type="button" class="active" onclick="setCanvasTool('canvasD', 'straight')">📏 Riga</button>
+        <button type="button" onclick="setCanvasTool('canvasD', 'curve')">✏️ Curva</button>
+        <button type="button" onclick="setCanvasTool('canvasD', 'text')">🔤 Testo</button>
+    </div>
+    <button type="button" class="btn-utility" onclick="undoCanvas('canvasD')">↩️ Annulla</button>
+    <button type="button" class="btn-utility" onclick="clearCanvas('canvasD')">🗑️ Pulisci</button>
+</div>
 
 <br>
 <button type="button" onclick="showStep('step2')">Indietro</button>
@@ -433,20 +515,39 @@ function nextStep4(){ showStep('step5'); }
 
 /* ===== Canvas con Undo + Testo ===== */
 
-const canvasStore = {};
+const canvasStore = {}; // (Sistemato anche il doppione del punto 1!)
+
+// --- LA FUNZIONE SETCANVASTOOL DEVE STARE QUI ---
+function setCanvasTool(canvasId, tool) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+
+    canvas.currentTool = tool;
+
+    const toolsContainer = document.getElementById(`tools_${canvasId}`);
+    if (toolsContainer) {
+        toolsContainer.querySelectorAll('.btn-group button').forEach(btn => btn.classList.remove('active'));
+        
+        let btnIndex = (tool === "straight") ? 1 : (tool === "curve" ? 2 : 3);
+        const activeBtn = toolsContainer.querySelector(`.btn-group button:nth-child(${btnIndex})`);
+        if(activeBtn) activeBtn.classList.add('active');
+    }
+}
+
+function clearCanvas(id){ document.getElementById(id).clearAll(); }
+function undoCanvas(id){ document.getElementById(id).undoLast(); }
 
 function setupCanvas(canvas){
     const ctx = canvas.getContext("2d");
     canvasStore[canvas.id] = [];
+    
+    canvas.currentTool = "straight"; // Default: riga dritta
 
     function resize(){
         const rect = canvas.getBoundingClientRect();
-
-        // Se non è visibile ancora, non fare nulla
         if(rect.width === 0 || rect.height === 0) return;
 
         const dpr = window.devicePixelRatio || 1;
-
         canvas.width = rect.width * dpr;
         canvas.height = rect.height * dpr;
 
@@ -455,13 +556,12 @@ function setupCanvas(canvas){
 
         ctx.lineWidth = 2;
         ctx.lineCap = "round";
+        ctx.lineJoin = "round";
 
         redraw();
     }
 
-    // Rende richiamabile il resize dall’esterno
     canvas.forceResize = resize;
-
     resize();
     window.addEventListener("resize", resize);
 
@@ -476,21 +576,41 @@ function setupCanvas(canvas){
     let drawing=false, currentStroke=null;
 
     function start(e){
-        drawing=true;
-        const pos=getPos(e);
-        currentStroke = {type:"stroke", points:[pos]};
+        const pos = getPos(e);
+
+        if (canvas.currentTool === "text") {
+            const text = prompt("Inserisci la quota o l'annotazione:");
+            if(text) {
+                canvasStore[canvas.id].push({type:"text", text: text, x: pos.x, y: pos.y});
+                redraw();
+            }
+            return;
+        }
+
+        drawing = true;
+        currentStroke = {
+            type: "stroke", 
+            mode: canvas.currentTool, 
+            points: [pos]
+        };
         canvasStore[canvas.id].push(currentStroke);
         e.preventDefault();
     }
 
-function move(e) {
+    function move(e) {
         if (!drawing) return;
         const pos = getPos(e);
-        
-        // Durante il movimento, mostriamo la linea "elastica" 
-        // così vedi dove stai andando prima che si raddrizzi
-        currentStroke.points[1] = pos; 
-        
+
+        if (currentStroke.mode === "straight") {
+            currentStroke.points[1] = pos;
+        } else if (currentStroke.mode === "curve") {
+            const lastPt = currentStroke.points[currentStroke.points.length - 1];
+            const dist = Math.sqrt(Math.pow(pos.x - lastPt.x, 2) + Math.pow(pos.y - lastPt.y, 2));
+            if(dist > 5) {
+                currentStroke.points.push(pos);
+            }
+        }
+
         redraw();
         e.preventDefault();
     }
@@ -498,21 +618,18 @@ function move(e) {
     function stop(e) {
         if (!drawing) return;
 
-        const startPoint = currentStroke.points[0];
-        const endPoint = currentStroke.points[1];
-
-        if (endPoint) {
+        if (currentStroke.mode === "straight" && currentStroke.points[1]) {
+            const startPoint = currentStroke.points[0];
+            const endPoint = currentStroke.points[1];
             const dx = endPoint.x - startPoint.x;
             const dy = endPoint.y - startPoint.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
 
-            // Se la linea è più lunga di 5 pixel, la raddrizziamo
             if (distance > 5) {
                 const angle = Math.atan2(dy, dx);
-                const snapStep = Math.PI / 90; // I tuoi 2 gradi
+                const snapStep = Math.PI / 90; // 2 gradi
                 const snapAngle = Math.round(angle / snapStep) * snapStep;
 
-                // Calcoliamo il punto finale "perfetto"
                 currentStroke.points[1] = {
                     x: startPoint.x + Math.cos(snapAngle) * distance,
                     y: startPoint.y + Math.sin(snapAngle) * distance
@@ -528,38 +645,38 @@ function move(e) {
 
     function redraw(){
         ctx.clearRect(0,0,canvas.width,canvas.height);
-        canvasStore[canvas.id].forEach(item=>{
-            if(item.type==="stroke"){
+        
+        canvasStore[canvas.id].forEach(item => {
+            if(item.type === "stroke"){
                 ctx.beginPath();
-                if(item.points.length > 0){
-                    ctx.moveTo(item.points[0].x, item.points[0].y);
-                    for(let i=1; i<item.points.length; i++){
+                if(item.points.length === 0) return;
+
+                ctx.moveTo(item.points[0].x, item.points[0].y);
+
+                if (item.mode === "straight" || item.points.length < 3) {
+                    for(let i=1; i < item.points.length; i++){
                         ctx.lineTo(item.points[i].x, item.points[i].y);
                     }
+                } else {
+                    let i;
+                    for (i = 1; i < item.points.length - 2; i++) {
+                        const xc = (item.points[i].x + item.points[i + 1].x) / 2;
+                        const yc = (item.points[i].y + item.points[i + 1].y) / 2;
+                        ctx.quadraticCurveTo(item.points[i].x, item.points[i].y, xc, yc);
+                    }
+                    ctx.quadraticCurveTo(item.points[i].x, item.points[i].y, item.points[i + 1].x, item.points[i + 1].y);
                 }
                 ctx.stroke();
             }
-            if(item.type==="text"){
-                ctx.font="16px Arial";
-                ctx.fillText(item.text,item.x,item.y);
+
+            if(item.type === "text"){
+                ctx.font = "bold 14px Arial";
+                ctx.fillStyle = "black";
+                ctx.fillText(item.text, item.x, item.y);
             }
         });
     }
 
-    canvas.addEventListener("dblclick", function(e){
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const text = prompt("Inserisci testo:");
-    if(text){
-        // Aggiungi lo store
-        canvasStore[canvas.id].push({type:"text", text: text, x: x, y: y});
-        // Ridisegna tutto sul canvas usando il ctx corretto
-        redraw();
-    }
-});
-
-    // Aggiungi event listener per disegno
     canvas.addEventListener("mousedown", start);
     canvas.addEventListener("mousemove", move);
     canvas.addEventListener("mouseup", stop);
@@ -567,20 +684,18 @@ function move(e) {
     canvas.addEventListener("touchmove", move, { passive: false });
     canvas.addEventListener("touchend", stop, { passive: false });
 
-    canvas.undoLast=function(){
+    canvas.undoLast = function(){
         canvasStore[canvas.id].pop();
         redraw();
     };
 
-    canvas.clearAll=function(){
-        canvasStore[canvas.id]=[];
+    canvas.clearAll = function(){
+        canvasStore[canvas.id] = [];
         redraw();
     };
 }
 
-function clearCanvas(id){ document.getElementById(id).clearAll(); }
-function undoCanvas(id){ document.getElementById(id).undoLast(); }
-
+// Subito dopo setupCanvas rimangono i 4 canvas iniziali...
 ["canvasA","canvasB","canvasC","canvasD"].forEach(id=>{
     setupCanvas(document.getElementById(id));
 });
@@ -598,11 +713,11 @@ function creaElemento(tipo) {
     wrapper.className = "serramento-wrapper";
     wrapper.style = "border:1px solid #ccc; padding:15px; margin-bottom:20px; position:relative; background:#fdfdfd;";
 
-    wrapper.innerHTML = `
+wrapper.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
         <h3 class="titolo-dinamico" style="margin: 0;">${labelTitolo} ${numeroAttuale}</h3>
         <button type="button" onclick="rimuoviERinomina(this, '${tipo}', '${labelTitolo}')" 
-                style="background-color: #dc3545; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                style="background-color: #dc3545; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top:0 !important;">
                 Elimina X
         </button>
     </div>
@@ -610,9 +725,18 @@ function creaElemento(tipo) {
         <div style="flex:1; min-width:280px;">
             <label>Schema</label>
             <canvas id="${canvasId}"></canvas>
-            <button type="button" onclick="undoCanvas('${canvasId}')">Annulla linea</button>
-            <button type="button" onclick="clearCanvas('${canvasId}')">Pulisci</button>
+            
+            <div class="canvas-tools" id="tools_${canvasId}">
+                <div class="btn-group">
+                    <button type="button" class="active" onclick="setCanvasTool('${canvasId}', 'straight')">📏 Riga</button>
+                    <button type="button" onclick="setCanvasTool('${canvasId}', 'curve')">✏️ Curva</button>
+                    <button type="button" onclick="setCanvasTool('${canvasId}', 'text')">🔤 Testo</button>
+                </div>
+                <button type="button" class="btn-utility" onclick="undoCanvas('${canvasId}')">↩️ Annulla</button>
+                <button type="button" class="btn-utility" onclick="clearCanvas('${canvasId}')">🗑️ Pulisci</button>
+            </div>
         </div>
+        
         <div style="flex:1; min-width:280px;">
             <label>Nome/Modello*</label>
             <input type="text" name="${namePrefix}nome[]" required>
@@ -782,7 +906,6 @@ async function generaPdfLocale(){
     // fallback: scarica il file
     pdf.save('rilievo.pdf');
 }
-
 
 </script>
 
