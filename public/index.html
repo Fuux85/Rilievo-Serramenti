@@ -827,40 +827,23 @@ document.getElementById('rilievoForm').addEventListener('submit', async function
     btn.textContent = "Invio in corso... attendi...";
     btn.disabled = true;
 
-    // Creiamo il FormData direttamente dal form (prende i dati base del cantiere)
+    // Crea il FormData prendendo i dati reali compilati sullo schermo!
     const formData = new FormData(form);
 
-    // 1. Raccogliamo MANUALMENTE i testi dei Serramenti, Porte e Accessori per sicurezza
-    const sezioni = ['', 'porte_', 'accessori_'];
-    sezioni.forEach(prefisso => {
-        const nomi = Array.from(document.querySelectorAll(`input[name="${prefisso}nome[]"]`)).map(i => i.value);
-        const larghezze = Array.from(document.querySelectorAll(`input[name="${prefisso}larghezza[]"]`)).map(i => i.value);
-        const altezze = Array.from(document.querySelectorAll(`input[name="${prefisso}altezza[]"]`)).map(i => i.value);
-        const note = Array.from(document.querySelectorAll(`textarea[name="${prefisso}note[]"]`)).map(i => i.value);
-
-        // Puliamo i vecchi valori per evitare che si duplichino o si mischino i vuoti
-        formData.delete(`${prefisso}nome[]`);
-        formData.delete(`${prefisso}larghezza[]`);
-        formData.delete(`${prefisso}altezza[]`);
-        formData.delete(`${prefisso}note[]`);
-
-        // Li inseriamo puliti
-        nomi.forEach(v => formData.append(`${prefisso}nome[]`, v));
-        larghezze.forEach(v => formData.append(`${prefisso}larghezza[]`, v));
-        altezze.forEach(v => formData.append(`${prefisso}altezza[]`, v));
-        note.forEach(v => formData.append(`${prefisso}note[]`, v));
-    });
-
-    // 2. Raccogliamo i Disegni dei Serramenti
+    // 1. Raccogliamo i disegni Canvas Dinamici
     const canvasDinamici = document.querySelectorAll('canvas[id^="canvas_"]');
     canvasDinamici.forEach(canvas => {
-        const imgData = canvas.toDataURL('image/png');
-        if (imgData.length > 1000) { 
-            formData.set(canvas.id, imgData); // Associa il disegno all'ID univoco
+        try {
+            const imgData = canvas.toDataURL('image/png');
+            if (imgData.length > 1000) { 
+                formData.set(canvas.id, imgData); 
+            }
+        } catch (err) {
+            console.warn("Errore lettura canvas dinamico:", err);
         }
     });
 
-    // 3. Raccogliamo i 4 schemi fissi (A, B, C, D)
+    // 2. Raccogliamo i 4 schemi fissi (A, B, C, D)
     ['canvasA','canvasB','canvasC','canvasD'].forEach(id => {
         const c = document.getElementById(id);
         if(c) {
