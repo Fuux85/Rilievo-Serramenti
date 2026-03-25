@@ -816,24 +816,24 @@ document.getElementById('rilievoForm').addEventListener('submit', async function
     btn.textContent = "Invio in corso... attendi...";
     btn.disabled = true;
 
-    // Creiamo il FormData base dal modulo
+// Creiamo il FormData base dal modulo
     const formData = new FormData(form);
 
-    // 🔴 FORZATURA 1: Recupero manuale dei testi (Nomi, Larghezze, Altezze, Note)
+    // ✅ FORZATURA 1 CORRETTA: Usiamo .set() per non raddoppiare i dati!
     const campiDinamici = form.querySelectorAll('input[name*="[]"], textarea[name*="[]"]');
     campiDinamici.forEach(input => {
         if (input.value) {
-            formData.append(input.name, input.value);
+            formData.set(input.name, input.value); // Usa .set() al posto di .append()!
         }
     });
 
-    // 🔴 FORZATURA 2: Recupero manuale dei Canvas dei serramenti (disegni dinamici)
+    // ✅ FORZATURA 2 CORRETTA: Recupero manuale dei Canvas
     const canvasDinamici = document.querySelectorAll('canvas[id^="canvas_"]');
     canvasDinamici.forEach(canvas => {
         try {
             const imgData = canvas.toDataURL('image/png');
             if (imgData.length > 1000) { 
-                formData.append(canvas.id, imgData);
+                formData.set(canvas.id, imgData); // Usa .set() anche qui!
             }
         } catch (err) {
             console.warn("Errore lettura canvas dinamico:", err);
