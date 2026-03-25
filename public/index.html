@@ -806,29 +806,47 @@ aggiungiFoto();
 // possiamo espandere il codice per generare un PDF lato client usando
 // jsPDF/html2pdf se si vuole lavorare offline.
 
-document.getElementById('rilievoForm').addEventListener('submit', async function(e){
+document.getElementById('rilievoForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
     const form = e.target;
     const btn = form.querySelector('button[type="submit"]');
     const originalText = btn.textContent;
     
-    // Feedback visivo per il tecnico
     btn.textContent = "Invio in corso... attendi...";
     btn.disabled = true;
 
+    // Creiamo il FormData base dal modulo
     const formData = new FormData(form);
 
-    // Raccogliamo i 4 schemi fissi (Posa A, B, C, D)
-    ['canvasA','canvasB','canvasC','canvasD'].forEach(id => {
-        const c = document.getElementById(id);
-        if(c) formData.append(id, c.toDataURL('image/png'));
+    // 🔴 FORZATURA 1: Recupero manuale dei testi (Nomi, Larghezze, Altezze, Note)
+    const campiDinamici = form.querySelectorAll('input[name*="[]"], textarea[name*="[]"]');
+    campiDinamici.forEach(input => {
+        if (input.value) {
+            formData.append(input.name, input.value);
+        }
     });
 
-    // Raccogliamo TUTTI i canvas dei serramenti/porte/accessori (quelli con l'ID che inizia per canvas_)
-    const tuttiICanvasDinamici = document.querySelectorAll('canvas[id^="canvas_"]');
-    tuttiICanvasDinamici.forEach(c => {
-        formData.append(c.id, c.toDataURL('image/png'));
+    // 🔴 FORZATURA 2: Recupero manuale dei Canvas dei serramenti (disegni dinamici)
+    const canvasDinamici = document.querySelectorAll('canvas[id^="canvas_"]');
+    canvasDinamici.forEach(canvas => {
+        try {
+            const imgData = canvas.toDataURL('image/png');
+            if (imgData.length > 1000) { 
+                formData.append(canvas.id, imgData);
+            }
+        } catch (err) {
+            console.warn("Errore lettura canvas dinamico:", err);
+        }
+    });
+
+    // Recupero dei 4 schemi fissi (A, B, C, D)
+    ['canvasA','canvasB','canvasC','canvasD'].forEach(id => {
+        const c = document.getElementById(id);
+        if(c) {
+            const img = c.toDataURL('image/png');
+            if(img.length > 1000) formData.append(id, img);
+        }
     });
 
     try {
@@ -839,15 +857,11 @@ document.getElementById('rilievoForm').addEventListener('submit', async function
         });
         
         const resultText = await resp.text();
-        alert(resultText); // Ti dirà "PDF inviato correttamente!"
+        alert(resultText);
         
-        if(resp.ok) {
-            // Se vuoi che il modulo si svuoti dopo l'invio, togli le due barre qui sotto:
-            // location.reload();
-        }
     } catch(err) {
         console.error('Errore invio:', err);
-        alert('Errore di connessione. Provo a generare il PDF sul telefono...');
+        alert('Errore di connessione. Uso il salvataggio locale (jsPDF).');
         generaPdfLocale();
     } finally {
         btn.textContent = originalText;
