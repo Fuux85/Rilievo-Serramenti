@@ -67,13 +67,12 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
 const toArray = (val) => Array.isArray(val) ? val : (val ? [val] : []);
 
 const scriviSezione = (titoloSezione, prefix) => {
-    const nomi = toArray(data[prefix + 'nome[]']);
-    const largh = toArray(data[prefix + 'larghezza[]']);
-    const alt = toArray(data[prefix + 'altezza[]']);
-    const note = toArray(data[prefix + 'note[]']);
-    
-    // 🏷️ Leggiamo l'etichetta (ID) del disegno dal modulo
-    const canvasIds = toArray(data[prefix + 'canvas_id[]']); 
+    // Cerchiamo sia con le parentesi quadre [] sia senza (molto più sicuro!)
+    const nomi = toArray(data[prefix + 'nome[]'] || data[prefix + 'nome']);
+    const largh = toArray(data[prefix + 'larghezza[]'] || data[prefix + 'larghezza']);
+    const alt = toArray(data[prefix + 'altezza[]'] || data[prefix + 'altezza']);
+    const note = toArray(data[prefix + 'note[]'] || data[prefix + 'note']);
+    const canvasIds = toArray(data[prefix + 'canvas_id[]'] || data[prefix + 'canvas_id']); 
 
     doc.addPage();
     doc.fontSize(16).font('Helvetica-Bold').text(titoloSezione, { underline: true });
@@ -89,7 +88,6 @@ const scriviSezione = (titoloSezione, prefix) => {
             doc.text(`Misure: ${largh[idx] || '?'} x ${alt[idx] || '?'} mm`);
             if (note[idx]) doc.text(`Note: ${note[idx]}`);
 
-            // 🎯 Cerchiamo il disegno esatto usando l'ID dell'etichetta!
             const mioCanvasId = canvasIds[idx]; 
 
             if (mioCanvasId && data[mioCanvasId] && data[mioCanvasId].includes('base64')) {
