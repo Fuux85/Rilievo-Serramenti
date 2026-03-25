@@ -103,10 +103,10 @@ const scriviSezione = (titoloSezione, prefix) => {
     }
 };
 
-// Incolla queste 3 righe esatte in fondo alla funzione nel tuo server.js!
-scriviSezione('Serramenti ed Accessori', '');
-scriviSezione('Porte Blindate o Porte Interne', 'porte_');
-scriviSezione('Accessori Liberi', 'accessori_');
+// ✅ CODICE CORRETTO: Mettiamo i titoli standard per il PDF usando i prefissi che l'HTML genera davvero!
+scriviSezione('Serramenti', '');
+scriviSezione('Porte', 'porte_');
+scriviSezione('Accessori', 'accessori_');
 
     // 4. FOTO CANTIERE
     if (files && files.length > 0) {
