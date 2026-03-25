@@ -83,7 +83,7 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
                 doc.text(`Misure: ${largh[idx] || '?'} x ${alt[idx] || '?'} mm`);
                 if (note[idx]) doc.text(`Note: ${note[idx]}`);
 
-                const tuttiCanvasSezione = Object.keys(data).filter(k => k.startsWith('canvas_' + prefix.replace('_','')));
+                const tuttiCanvasSezione = Object.keys(data).filter(k => k.startsWith('canvas_' + (prefix === '' ? 'serramenti' : prefix.replace('_',''))));
                 const mioCanvas = tuttiCanvasSezione[idx];
 
                 if (mioCanvas && data[mioCanvas] && data[mioCanvas].includes('base64')) {
