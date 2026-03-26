@@ -63,56 +63,65 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
         }
     });
 
-// 3. GESTIONE ELEMENTI DINAMICI
-const toArray = (val) => Array.isArray(val) ? val : (val ? [val] : []);
+// 3. GESTIONE ELEMENTI DINAMICI (NUOVA VERSIONE JSON)
 
-const scriviSezione = (titoloSezione, prefix) => {
-    const nomiRaw = data[prefix + 'nome[]'] || data[prefix + 'nome'];
-    const nomi = toArray(nomiRaw);
+let datiStrutturati = {
+    serramenti: [],
+    porte: [],
+    accessori: []
+};
 
+try {
+    if (data.dati_json) {
+        datiStrutturati = JSON.parse(data.dati_json);
+    }
+} catch (e) {
+    console.log("Errore parsing JSON:", e.message);
+}
+
+const scriviSezioneJSON = (titolo, lista) => {
     doc.addPage();
-    doc.fontSize(16).font('Helvetica-Bold').text(titoloSezione, { underline: true });
+    doc.fontSize(16).font('Helvetica-Bold').text(titolo, { underline: true });
     doc.moveDown();
 
-    if (nomi.length === 0 || (nomi.length === 1 && !nomi[0])) {
-        doc.fontSize(12).font('Helvetica').text("Nessun elemento inserito o rilevato per questa sezione.");
-        return; 
+    if (!lista || lista.length === 0) {
+        doc.fontSize(12).font('Helvetica')
+           .text("Nessun elemento inserito.");
+        return;
     }
 
-    const largh = toArray(data[prefix + 'larghezza[]'] || data[prefix + 'larghezza']);
-    const alt = toArray(data[prefix + 'altezza[]'] || data[prefix + 'altezza']);
-    const note = toArray(data[prefix + 'note[]'] || data[prefix + 'note']);
-    const canvasIds = toArray(data[prefix + 'canvas_id[]'] || data[prefix + 'canvas_id']);
-
-    nomi.forEach((nome, idx) => {
-        if (!nome || nome.trim() === "") return; // Salta i moduli vuoti fantasma!
-
+    lista.forEach((el, i) => {
         doc.moveDown();
-        doc.fontSize(12).font('Helvetica-Bold').text(`${titoloSezione.toUpperCase()}: ${nome}`);
+
+        doc.fontSize(12).font('Helvetica-Bold')
+           .text(`${titolo.slice(0, -1)} ${i + 1}: ${el.nome}`);
+
         doc.fontSize(10).font('Helvetica');
-        
-        const l = largh[idx] || '?';
-        const a = alt[idx] || '?';
-        const n = note[idx] || '';
 
-        doc.text(`Misure: ${l} x ${a} mm`);
-        if (n) doc.text(`Note: ${n}`);
+        doc.text(`Misure: ${el.larghezza || '?'} x ${el.altezza || '?'} mm`);
 
-        const mioCanvasId = canvasIds[idx];
-        if (mioCanvasId && data[mioCanvasId] && data[mioCanvasId].includes('base64')) {
-            try {
-                const base64 = data[mioCanvasId].replace(/^data:image\/png;base64,/, '');
-                doc.image(Buffer.from(base64, 'base64'), { width: 250 });
-            } catch (e) { console.log("Errore disegno " + prefix, e.message); }
+        if (el.note) {
+            doc.text(`Note: ${el.note}`);
         }
+
+        // ✅ CANVAS (solo se esiste davvero)
+        if (el.canvas && el.canvas.includes('base64')) {
+            try {
+                const base64 = el.canvas.replace(/^data:image\/png;base64,/, '');
+                doc.image(Buffer.from(base64, 'base64'), { width: 250 });
+            } catch (e) {
+                console.log("Errore canvas elemento:", e.message);
+            }
+        }
+
         doc.text('--------------------------------------------------');
     });
 };
 
-// ✅ CODICE CORRETTO: Mettiamo i titoli standard per il PDF usando i prefissi che l'HTML genera davvero!
-scriviSezione('Serramenti', '');
-scriviSezione('Porte', 'porte_');
-scriviSezione('Accessori', 'accessori_');
+// 🔥 chiamate reali
+scriviSezioneJSON('Serramenti', datiStrutturati.serramenti);
+scriviSezioneJSON('Porte', datiStrutturati.porte);
+scriviSezioneJSON('Accessori', datiStrutturati.accessori);
 
     // 4. FOTO CANTIERE
     if (files && files.length > 0) {
