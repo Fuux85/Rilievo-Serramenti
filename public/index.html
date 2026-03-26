@@ -727,7 +727,6 @@ function creaElemento(tipo) {
     wrapper.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
         <h3 class="titolo-dinamico" style="margin: 0;">${labelTitolo} ${numeroAttuale}</h3>
-        <input type="hidden" name="${prefissoNomi}canvas_id[]" value="${canvasId}">      
         <button type="button" onclick="rimuoviERinomina(this, '${tipo}', '${labelTitolo}')" 
                 style="background-color: #dc3545; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top:0 !important;">
                 Elimina X
@@ -848,48 +847,67 @@ document.getElementById('rilievoForm').addEventListener('submit', async function
         if(checked) formData.append(nome, checked.value);
     });
 
-    // 2. Leggiamo i Serramenti Dinamici uno per uno (La Cucina!)
-    const sezioni = [
-        { prefisso: '', label: 'Serramenti' },
-        { prefisso: 'porte_', label: 'Porte' },
-        { prefisso: 'accessori_', label: 'Accessori' }
-    ];
+// 2. RACCOLTA DATI DINAMICI (VERSIONE PRO)
 
-    sezioni.forEach(sz => {
-        const wrapper = document.querySelectorAll('.serramento-wrapper');
-        
-        wrapper.forEach(blocco => {
-            // Controlliamo se questo blocco appartiene a questa sezione controllando il nome dell'input
-            const inputNome = blocco.querySelector(`input[name="${sz.prefisso}nome[]"]`);
-            if (inputNome && inputNome.value.trim() !== "") {
-                formData.append(`${sz.prefisso}nome[]`, inputNome.value);
-                
-                const l = blocco.querySelector(`input[name="${sz.prefisso}larghezza[]"]`);
-                formData.append(`${sz.prefisso}larghezza[]`, l ? l.value : "");
+const raccogliElementi = (containerId) => {
+    const elementi = [];
+    const blocchi = document.querySelectorAll(`#container_${containerId} .serramento-wrapper`);
 
-                const a = blocco.querySelector(`input[name="${sz.prefisso}altezza[]"]`);
-                formData.append(`${sz.prefisso}altezza[]`, a ? a.value : "");
+    blocchi.forEach(blocco => {
+        const nome = blocco.querySelector('input[name$="nome[]"]')?.value || "";
+        if (!nome.trim()) return;
 
-                const n = blocco.querySelector(`textarea[name="${sz.prefisso}note[]"]`);
-                formData.append(`${sz.prefisso}note[]`, n ? n.value : "");
+        const larghezza = blocco.querySelector('input[name$="larghezza[]"]')?.value || "";
+        const altezza = blocco.querySelector('input[name$="altezza[]"]')?.value || "";
+        const note = blocco.querySelector('textarea[name$="note[]"]')?.value || "";
 
-                const cid = blocco.querySelector(`input[name="${sz.prefisso}canvas_id[]"]`);
-                if(cid) formData.append(`${sz.prefisso}canvas_id[]`, cid.value);
-            }
+       const canvas = blocco.querySelector('canvas[id^="canvas_"]');
+        let canvasBase64 = "";
+
+        if (canvas) {
+            try {
+                const img = canvas.toDataURL('image/png');
+                if (img.length > 1000) canvasBase64 = img;
+            } catch(e){}
+        }
+
+        elementi.push({
+            nome,
+            larghezza,
+            altezza,
+            note,
+            canvas: canvasBase64
         });
     });
 
-    // 3. Leggiamo i Disegni (Canvas)
-    const tuttiCanvas = document.querySelectorAll('canvas');
-    tuttiCanvas.forEach(canvas => {
-        try {
-            const imgData = canvas.toDataURL('image/png');
-            if (imgData.length > 1000) { 
-                formData.append(canvas.id, imgData); 
-            }
-        } catch (err) { console.warn("Errore canvas:", err); }
-    });
+    return elementi;
+};
 
+const datiStrutturati = {
+    serramenti: raccogliElementi('serramenti'),
+    porte: raccogliElementi('porte'),
+    accessori: raccogliElementi('accessori')
+};
+
+// 👇 invio unico JSON
+console.log("DATI JSON:", datiStrutturati);
+formData.append('dati_json', JSON.stringify(datiStrutturati));
+
+    // 3. Canvas fissi (Posa A B C D)
+['canvasA','canvasB','canvasC','canvasD'].forEach(id=>{
+    const canvas = document.getElementById(id);
+    if(canvas){
+        try{
+            const img = canvas.toDataURL('image/png');
+            if(img.length > 1000){
+                formData.append(id, img);
+            }
+        }catch(e){
+            console.log("Errore canvas fisso:", id);
+        }
+    }
+});
+  
     // 4. Leggiamo le Foto scattate
     const inputFoto = document.querySelectorAll('input[name="foto[]"]');
     inputFoto.forEach(input => {
