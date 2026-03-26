@@ -992,15 +992,41 @@ async function generaPdfLocale(){
         }
     });
 
-    const elementiDinamici = document.querySelectorAll('.serramento-wrapper');
-    if(elementiDinamici.length > 0){
-        pdf.addPage();
-        pdf.text('Elementi Rilevati', 10, 10);
-        elementiDinamici.forEach((blocco, i) => {
-            const titolo = blocco.querySelector('.titolo-dinamico').textContent;
-            pdf.text(titolo, 10, 20 + (i * 10));
-        });
-    }
+const scriviSezione = (titolo, lista) => {
+    if(lista.length === 0) return;
+
+    pdf.addPage();
+    pdf.setFontSize(14);
+    pdf.text(titolo, 10, 10);
+
+    let y = 20;
+
+    lista.forEach((el, i) => {
+        pdf.setFontSize(11);
+        pdf.text(`${titolo.slice(0,-1)} ${i+1}: ${el.nome}`, 10, y);
+        y += 6;
+
+        pdf.setFontSize(10);
+        pdf.text(`Misure: ${el.larghezza} x ${el.altezza} mm`, 10, y);
+        y += 6;
+
+        if(el.note){
+            pdf.text(`Note: ${el.note}`, 10, y);
+            y += 6;
+        }
+
+        if(el.canvas){
+            pdf.addImage(el.canvas, 'PNG', 10, y, 80, 0);
+            y += 50;
+        }
+
+        y += 5;
+    });
+};
+
+scriviSezione('Serramenti', datiStrutturati.serramenti);
+scriviSezione('Porte', datiStrutturati.porte);
+scriviSezione('Accessori', datiStrutturati.accessori);
 
     const blob = pdf.output('blob');
     if(navigator.share && navigator.canShare && navigator.canShare({files:[new File([blob],'rilievo.pdf',{type:'application/pdf'})]})){
