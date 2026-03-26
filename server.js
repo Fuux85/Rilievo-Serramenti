@@ -113,25 +113,6 @@ scriviSezione('Serramenti', datiStrutturati.serramenti);
 scriviSezione('Porte', datiStrutturati.porte);
 scriviSezione('Accessori', datiStrutturati.accessori);
 
-        // ✅ CANVAS (solo se esiste davvero)
-        if (el.canvas && el.canvas.includes('base64')) {
-            try {
-                const base64 = el.canvas.replace(/^data:image\/png;base64,/, '');
-                doc.image(Buffer.from(base64, 'base64'), { width: 250 });
-            } catch (e) {
-                console.log("Errore canvas elemento:", e.message);
-            }
-        }
-
-        doc.text('--------------------------------------------------');
-    });
-};
-
-// 🔥 chiamate reali
-scriviSezioneJSON('Serramenti', datiStrutturati.serramenti);
-scriviSezioneJSON('Porte', datiStrutturati.porte);
-scriviSezioneJSON('Accessori', datiStrutturati.accessori);
-
     // 4. FOTO CANTIERE
     if (files && files.length > 0) {
         files.forEach(function(file, idx) {
