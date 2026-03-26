@@ -938,8 +938,40 @@ formData.append('dati_json', JSON.stringify(datiStrutturati));
 
 async function generaPdfLocale(){
     const { jsPDF } = window.jspdf;
+    function raccogliElementiOffline(containerId) {
+    const elementi = [];
+    const blocchi = document.querySelectorAll(`#container_${containerId} .serramento-wrapper`);
+
+    blocchi.forEach(blocco => {
+        const nome = blocco.querySelector('input[name$="nome[]"]')?.value || "";
+        if (!nome.trim()) return;
+
+        const larghezza = blocco.querySelector('input[name$="larghezza[]"]')?.value || "";
+        const altezza = blocco.querySelector('input[name$="altezza[]"]')?.value || "";
+        const note = blocco.querySelector('textarea[name$="note[]"]')?.value || "";
+
+        const canvas = blocco.querySelector('canvas');
+        let img = "";
+
+        if(canvas){
+            try{
+                const base64 = canvas.toDataURL('image/png');
+                if(base64.length > 1000) img = base64;
+            }catch(e){}
+        }
+
+        elementi.push({ nome, larghezza, altezza, note, canvas: img });
+    });
+
+    return elementi;
+}
     const pdf = new jsPDF({unit:'mm', format:'a4'});
     let y = 10;
+    const datiStrutturati = {
+    serramenti: raccogliElementiOffline('serramenti'),
+    porte: raccogliElementiOffline('porte'),
+    accessori: raccogliElementiOffline('accessori')
+};
     pdf.setFontSize(16);
     pdf.text('Rilievo Serramenti', 105, y, { align: 'center' });
     y += 10;
