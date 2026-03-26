@@ -1028,17 +1028,6 @@ scriviSezione('Serramenti', datiStrutturati.serramenti);
 scriviSezione('Porte', datiStrutturati.porte);
 scriviSezione('Accessori', datiStrutturati.accessori);
 
-    const blob = pdf.output('blob');
-    if(navigator.share && navigator.canShare && navigator.canShare({files:[new File([blob],'rilievo.pdf',{type:'application/pdf'})]})){
-        try{
-            await navigator.share({
-                files:[new File([blob],'rilievo.pdf',{type:'application/pdf'})],
-                title:'Rilievo Serramenti',
-                text:'Documento generato localmente'
-            });
-            return;
-        } catch(e){ console.warn('Condivisione fallita',e); }
-    }
 // FOTO CANTIERE (OFFLINE)
 const inputFoto = document.querySelectorAll('input[name="foto[]"]');
 
@@ -1061,6 +1050,18 @@ for (let i = 0; i < inputFoto.length; i++) {
     });
 }
     
+    const blob = pdf.output('blob');
+    if(navigator.share && navigator.canShare && navigator.canShare({files:[new File([blob],'rilievo.pdf',{type:'application/pdf'})]})){
+        try{
+            await navigator.share({
+                files:[new File([blob],'rilievo.pdf',{type:'application/pdf'})],
+                title:'Rilievo Serramenti',
+                text:'Documento generato localmente'
+            });
+            return;
+        } catch(e){ console.warn('Condivisione fallita',e); }
+    }
+
     pdf.save('rilievo.pdf');
 }
 </script>
