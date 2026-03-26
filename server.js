@@ -17,6 +17,15 @@ app.get('/', (req, res) => {
 
 app.post('/invia', upload.array('foto[]'), (req, res) => {
     const data = req.body;
+    let datiStrutturati = { serramenti: [], porte: [], accessori: [] };
+
+try {
+    if (data.dati_json) {
+        datiStrutturati = JSON.parse(data.dati_json);
+    }
+} catch (e) {
+    console.log("Errore parsing JSON:", e.message);
+}
     const files = req.files || [];
 
     console.log('=== NUOVO RILIEVO RICEVUTO (VIA API) ===');
@@ -63,46 +72,46 @@ app.post('/invia', upload.array('foto[]'), (req, res) => {
         }
     });
 
-// 3. GESTIONE ELEMENTI DINAMICI (NUOVA VERSIONE JSON)
+// 3. GESTIONE ELEMENTI DINAMICI (VERSIONE JSON - CORRETTA)
 
-let datiStrutturati = {
-    serramenti: [],
-    porte: [],
-    accessori: []
-};
+const scriviSezione = (titolo, lista) => {
+    if (!lista || lista.length === 0) return;
 
-try {
-    if (data.dati_json) {
-        datiStrutturati = JSON.parse(data.dati_json);
-    }
-} catch (e) {
-    console.log("Errore parsing JSON:", e.message);
-}
-
-const scriviSezioneJSON = (titolo, lista) => {
     doc.addPage();
     doc.fontSize(16).font('Helvetica-Bold').text(titolo, { underline: true });
     doc.moveDown();
 
-    if (!lista || lista.length === 0) {
-        doc.fontSize(12).font('Helvetica')
-           .text("Nessun elemento inserito.");
-        return;
-    }
+    lista.forEach((el) => {
+        if (!el.nome) return;
 
-    lista.forEach((el, i) => {
         doc.moveDown();
-
         doc.fontSize(12).font('Helvetica-Bold')
-           .text(`${titolo.slice(0, -1)} ${i + 1}: ${el.nome}`);
+           .text(`${titolo.slice(0,-1).toUpperCase()}: ${el.nome}`);
 
         doc.fontSize(10).font('Helvetica');
-
         doc.text(`Misure: ${el.larghezza || '?'} x ${el.altezza || '?'} mm`);
 
         if (el.note) {
             doc.text(`Note: ${el.note}`);
         }
+
+        if (el.canvas && el.canvas.includes('base64')) {
+            try {
+                const base64 = el.canvas.replace(/^data:image\/png;base64,/, '');
+                doc.image(Buffer.from(base64, 'base64'), { width: 250 });
+            } catch (e) {
+                console.log("Errore immagine:", e.message);
+            }
+        }
+
+        doc.text('--------------------------------------------------');
+    });
+};
+
+// ✅ chiamate corrette
+scriviSezione('Serramenti', datiStrutturati.serramenti);
+scriviSezione('Porte', datiStrutturati.porte);
+scriviSezione('Accessori', datiStrutturati.accessori);
 
         // ✅ CANVAS (solo se esiste davvero)
         if (el.canvas && el.canvas.includes('base64')) {
