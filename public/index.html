@@ -1039,6 +1039,28 @@ scriviSezione('Accessori', datiStrutturati.accessori);
             return;
         } catch(e){ console.warn('Condivisione fallita',e); }
     }
+// FOTO CANTIERE (OFFLINE)
+const inputFoto = document.querySelectorAll('input[name="foto[]"]');
+
+for (let i = 0; i < inputFoto.length; i++) {
+    const file = inputFoto[i].files[0];
+    if (!file) continue;
+
+    const reader = new FileReader();
+
+    await new Promise((resolve) => {
+        reader.onload = function(e) {
+            pdf.addPage();
+            pdf.setFontSize(14);
+            pdf.text(`Foto Cantiere ${i + 1}`, 10, 10);
+
+            pdf.addImage(e.target.result, 'JPEG', 10, 20, 180, 0);
+            resolve();
+        };
+        reader.readAsDataURL(file);
+    });
+}
+    
     pdf.save('rilievo.pdf');
 }
 </script>
