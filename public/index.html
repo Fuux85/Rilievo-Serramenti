@@ -976,12 +976,31 @@ async function generaPdfLocale(){
     pdf.text('Rilievo Serramenti', 105, y, { align: 'center' });
     y += 10;
     pdf.setFontSize(12);
-    const fields = ['data_rilievo','tecnico_incaricato','cliente_nome','venditore','indirizzo_cliente','piano'];
-    fields.forEach(name=>{
-        const el = document.querySelector(`[name="${name}"]`);
-        if(el) pdf.text(`${name.replace(/_/g,' ')}: ${el.value}`, 10, y);
-        y += 6;
-    });
+// DATI PRINCIPALI
+const fields = ['data_rilievo','tecnico_incaricato','cliente_nome','venditore','indirizzo_cliente','piano'];
+fields.forEach(name=>{
+    const el = document.querySelector(`[name="${name}"]`);
+    if(el) pdf.text(`${name.replace(/_/g,' ')}: ${el.value}`, 10, y);
+    y += 6;
+});
+
+// LOGISTICA (radio)
+['autoscala','occupazione_suolo','ascensore','ztl'].forEach(nome => {
+    const checked = document.querySelector(`input[name="${nome}"]:checked`);
+    const val = checked ? checked.value : "Non specificato";
+    pdf.text(`${nome.replace(/_/g,' ')}: ${val}`, 10, y);
+    y += 6;
+});
+
+// NOTE CANTIERE
+const note = document.querySelector('[name="note_cantiere"]')?.value || "";
+if(note){
+    y += 4;
+    pdf.text("Note cantiere:", 10, y);
+    y += 6;
+    pdf.text(note, 10, y);
+    y += 8;
+}
 
     ['canvasA','canvasB','canvasC','canvasD'].forEach(id=>{
         const c = document.getElementById(id);
@@ -1016,11 +1035,24 @@ const scriviSezione = (titolo, lista) => {
         }
 
         if(el.canvas){
-            pdf.addImage(el.canvas, 'PNG', 10, y, 80, 0);
-            y += 50;
-        }
+        // ✅ controlla PRIMA
+    if(y > 220){
+        pdf.addPage();
+        y = 10;
+    }
 
-        y += 5;
+    pdf.addImage(el.canvas, 'PNG', 10, y, 80, 0);
+    y += 60;
+}
+
+y += 10;
+
+// ✅ controlla anche DOPO
+if(y > 260){
+    pdf.addPage();
+    y = 10;
+}
+        
     });
 };
 
