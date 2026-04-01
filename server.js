@@ -86,7 +86,13 @@ const scriviSezione = (titolo, lista) => {
 
         doc.moveDown();
         doc.fontSize(12).font('Helvetica-Bold')
-           .text(`${titolo.slice(0,-1).toUpperCase()}: ${el.nome}`);
+        const singularLabels = {
+            Serramenti: "Serramento",
+            Porte: "Porta",
+            Accessori: "Accessorio"
+};
+
+doc.text(`${singularLabels[titolo]} ${i+1}: ${el.nome}`);
 
         doc.fontSize(10).font('Helvetica');
         doc.text(`Misure: ${el.larghezza || '?'} x ${el.altezza || '?'} mm`);
