@@ -700,66 +700,92 @@ function setupCanvas(canvas){
     setupCanvas(document.getElementById(id));
 });
 
-/* Serramenti dinamici con numerazione intelligente */
+/* STEP 4 dinamico - nuovo motore sezioni */
+const sectionTitles = {
+    serramenti: "Serramenti ed Accessori",
+    porte: "Porte Blindate o Porte Interne",
+    accessori: "Accessori Liberi"
+};
+
+const sectionTemplates = {
+    serramenti: [
+        { label: "Posizione", name: "nome", type: "text", required: true }
+    ],
+    porte: [
+        { label: "Posizione Porta", name: "nome", type: "text", required: true }
+    ],
+    accessori: [
+        { label: "Nome Accessorio", name: "nome", type: "text", required: true }
+    ]
+};
+
+function generaCampo(campo) {
+    if (campo.type === "select") {
+        return `
+            <label>${campo.label}</label>
+            <select name="${campo.name}[]">
+                ${campo.options.map(o => `<option value="${o}">${o}</option>`).join("")}
+            </select>
+        `;
+    }
+
+    return `
+        <label>${campo.label}</label>
+        <input 
+            type="${campo.type}" 
+            name="${campo.name}[]" 
+            ${campo.required ? "required" : ""}
+        >
+    `;
+}
+
 function creaElemento(tipo) {
     const container = document.querySelector(`#container_${tipo} .items-list`);
-    const numeroAttuale = container.getElementsByClassName('serramento-wrapper').length + 1;
-    const canvasId = "canvas_" + tipo + "_" + Date.now();
-    
-    let labelTitolo = "Elemento";
-    let prefissoNomi = ""; 
+    const numero = container.children.length + 1;
+    const canvasId = `canvas_${tipo}_${Date.now()}`;
 
-    if (tipo === 'serramenti') {
-        labelTitolo = "Serramento";
-        prefissoNomi = ""; 
-    } else if (tipo === 'porte') {
-        labelTitolo = "Porta";
-        prefissoNomi = "porte_";
-    } else if (tipo === 'accessori') {
-        labelTitolo = "Accessorio";
-        prefissoNomi = "accessori_";
-    }
+    const campi = sectionTemplates[tipo];
+    if (!campi) return;
+
+    let campiHtml = campi.map(c => generaCampo(c)).join("");
 
     const wrapper = document.createElement("div");
     wrapper.className = "serramento-wrapper";
-    wrapper.style = "border:1px solid #ccc; padding:15px; margin-bottom:20px; position:relative; background:#fdfdfd;";
+    wrapper.style = "border:1px solid #ccc; padding:15px; margin-bottom:20px; background:#fff;";
 
     wrapper.innerHTML = `
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-        <h3 class="titolo-dinamico" style="margin: 0;">${labelTitolo} ${numeroAttuale}</h3>
-        <button type="button" onclick="rimuoviERinomina(this, '${tipo}', '${labelTitolo}')" 
-                style="background-color: #dc3545; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top:0 !important;">
-                Elimina X
-        </button>
-    </div>
-    <div class="flex-row">
-        <div style="flex:1; min-width:280px;">
-            <label>Schema</label>
-            <canvas id="${canvasId}"></canvas>
-            
-            <div class="canvas-tools" id="tools_${canvasId}">
-                <div class="btn-group">
-                    <button type="button" class="active" onclick="setCanvasTool('${canvasId}', 'straight')">📏 Riga</button>
-                    <button type="button" onclick="setCanvasTool('${canvasId}', 'curve')">✏️ Curva</button>
-                    <button type="button" onclick="setCanvasTool('${canvasId}', 'text')">🔤 Testo</button>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3 class="titolo-dinamico">${sectionTitles[tipo]} ${numero}</h3>
+            <button type="button" onclick="rimuoviERinomina(this, '${tipo}', '${sectionTitles[tipo]}')">
+                Elimina
+            </button>
+        </div>
+
+        <div class="flex-row">
+            <div style="flex:1; min-width:280px;">
+                <label>Schema</label>
+                <canvas id="${canvasId}"></canvas>
+
+                <div class="canvas-tools" id="tools_${canvasId}">
+                    <div class="btn-group">
+                        <button type="button" class="active" onclick="setCanvasTool('${canvasId}', 'straight')">📏 Riga</button>
+                        <button type="button" onclick="setCanvasTool('${canvasId}', 'curve')">✏️ Curva</button>
+                        <button type="button" onclick="setCanvasTool('${canvasId}', 'text')">🔤 Testo</button>
+                    </div>
+                    <button type="button" class="btn-utility" onclick="undoCanvas('${canvasId}')">↩️ Annulla</button>
+                    <button type="button" class="btn-utility" onclick="clearCanvas('${canvasId}')">🗑️ Pulisci</button>
                 </div>
-                <button type="button" class="btn-utility" onclick="undoCanvas('${canvasId}')">↩️ Annulla</button>
-                <button type="button" class="btn-utility" onclick="clearCanvas('${canvasId}')">🗑️ Pulisci</button>
+            </div>
+
+            <div style="flex:1; min-width:280px;">
+                ${campiHtml}
+
+                <label>Note</label>
+                <textarea name="note[]"></textarea>
             </div>
         </div>
-        
-        <div style="flex:1; min-width:280px;">
-            <label>Posizione*</label>
-            <input type="text" name="${prefissoNomi}nome[]" required>
-            <label>Larghezza (mm)*</label>
-            <input type="number" name="${prefissoNomi}larghezza[]" required>
-            <label>Altezza (mm)*</label>
-            <input type="number" name="${prefissoNomi}altezza[]" required>
-            <label>Note</label>
-            <textarea name="${prefissoNomi}note[]" rows="2"></textarea>
-        </div>
-    </div>`;
-    
+    `;
+
     container.appendChild(wrapper);
     setupCanvas(document.getElementById(canvasId));
 }
