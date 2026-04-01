@@ -999,11 +999,6 @@ async function generaPdfLocale(){
     return elementi;
 }
 
-        elementi.push({ nome, larghezza, altezza, note, canvas: img });
-    });
-
-    return elementi;
-}
     const pdf = new jsPDF({unit:'mm', format:'a4'});
     let y = 10;
     const datiStrutturati = {
