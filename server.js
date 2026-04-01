@@ -81,11 +81,11 @@ const scriviSezione = (titolo, lista) => {
     doc.fontSize(16).font('Helvetica-Bold').text(titolo, { underline: true });
     doc.moveDown();
 
-    lista.forEach((el) => {
+    lista.forEach((el, i) => {
         if (!el.nome) return;
 
         doc.moveDown();
-        doc.fontSize(12).font('Helvetica-Bold')
+        doc.fontSize(12).font('Helvetica-Bold');
         const singularLabels = {
             Serramenti: "Serramento",
             Porte: "Porta",
