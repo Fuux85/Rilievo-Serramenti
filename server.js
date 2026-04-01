@@ -137,14 +137,16 @@ lista.forEach((el, i) => {
             const imgBuffer = Buffer.from(base64, 'base64');
 
             const x = 60;
-            const y = doc.y + 5;
+            const yBox = doc.y + 5;
 
-            doc.rect(x, y, 220, 140).stroke();
-            doc.image(imgBuffer, x + 5, y + 5, {
+            doc.rect(x, yBox, 220, 140).stroke();
+            doc.image(imgBuffer, x + 5, yBox + 5, {
                 fit: [210, 130]
             });
 
-            doc.y = y + 150;
+            // spazio sicuro dopo il box
+            doc.moveDown(10);
+            
         } catch (e) {
             console.log("Errore immagine:", e.message);
         }
