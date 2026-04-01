@@ -61,16 +61,34 @@ try {
     doc.moveDown();
 
     // 2. SCHEMI DI POSA (Canvas A, B, C, D)
-    ['canvasA', 'canvasB', 'canvasC', 'canvasD'].forEach(function(id) {
-        if (data[id] && data[id].includes('base64')) {
-            try {
-                const base64Data = data[id].replace(/^data:image\/png;base64,/, '');
-                doc.addPage();
-                doc.fontSize(14).font('Helvetica-Bold').text('Schema Posa ' + id.replace('canvas', ''));
-                doc.image(Buffer.from(base64Data, 'base64'), { width: 450 });
-            } catch (e) { console.log("Errore canvas posa", e.message); }
+['canvasA', 'canvasB', 'canvasC', 'canvasD'].forEach(function(id) {
+    if (data[id] && data[id].includes('base64')) {
+        try {
+            const base64Data = data[id].replace(/^data:image\/png;base64,/, '');
+            const imgBuffer = Buffer.from(base64Data, 'base64');
+
+            doc.addPage();
+            doc.fontSize(14)
+               .font('Helvetica-Bold')
+               .text('Schema Posa ' + id.replace('canvas', ''));
+
+            const x = 60;
+            const y = doc.y + 10;
+
+            // box bordo
+            doc.rect(x, y, 470, 300).stroke();
+
+            // immagine dentro box
+            doc.image(imgBuffer, x + 5, y + 5, {
+                fit: [460, 290]
+            });
+
+            doc.y = y + 320;
+        } catch (e) {
+            console.log("Errore canvas posa", e.message);
         }
-    });
+    }
+});
 
 // 3. GESTIONE ELEMENTI DINAMICI (VERSIONE JSON - CORRETTA)
 
