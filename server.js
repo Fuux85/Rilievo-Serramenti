@@ -81,36 +81,57 @@ const scriviSezione = (titolo, lista) => {
     doc.fontSize(16).font('Helvetica-Bold').text(titolo, { underline: true });
     doc.moveDown();
 
-    lista.forEach((el, i) => {
-        if (!el.nome) return;
+lista.forEach((el, i) => {
+    if (!el.nome) return;
 
-        doc.moveDown();
-        doc.fontSize(12).font('Helvetica-Bold');
-        const singularLabels = {
-            Serramenti: "Serramento",
-            Porte: "Porta",
-            Accessori: "Accessorio"
-};
+    const singularLabels = {
+        Serramenti: "Serramento",
+        Porte: "Porta",
+        Accessori: "Accessorio"
+    };
 
-doc.text(`${singularLabels[titolo]} ${i+1}: ${el.nome}`);
+    doc.moveDown();
+    doc.fontSize(12).font('Helvetica-Bold');
+    doc.text(`${singularLabels[titolo]} ${i + 1}: ${el.nome}`);
 
+    // campi dinamici automatici
+    Object.entries(el).forEach(([key, value]) => {
+        if (["nome", "note", "canvas"].includes(key)) return;
+        if (!value) return;
+
+        const label = key.replace(/_/g, " ");
         doc.fontSize(10).font('Helvetica');
-
-        if (el.note) {
-            doc.text(`Note: ${el.note}`);
-        }
-
-        if (el.canvas && el.canvas.includes('base64')) {
-            try {
-                const base64 = el.canvas.replace(/^data:image\/png;base64,/, '');
-                doc.image(Buffer.from(base64, 'base64'), { width: 250 });
-            } catch (e) {
-                console.log("Errore immagine:", e.message);
-            }
-        }
-
-        doc.text('--------------------------------------------------');
+        doc.text(`${label}: ${value}`, { indent: 10 });
     });
+
+    // note
+    if (el.note) {
+        doc.fontSize(10).font('Helvetica');
+        doc.text(`Note: ${el.note}`, { indent: 10 });
+    }
+
+    // canvas con bordo
+    if (el.canvas && el.canvas.includes('base64')) {
+        try {
+            const base64 = el.canvas.replace(/^data:image\/png;base64,/, '');
+            const imgBuffer = Buffer.from(base64, 'base64');
+
+            const x = 60;
+            const y = doc.y + 5;
+
+            doc.rect(x, y, 220, 140).stroke();
+            doc.image(imgBuffer, x + 5, y + 5, {
+                fit: [210, 130]
+            });
+
+            doc.y = y + 150;
+        } catch (e) {
+            console.log("Errore immagine:", e.message);
+        }
+    }
+
+    doc.moveDown();
+});
 };
 
 // ✅ chiamate corrette
