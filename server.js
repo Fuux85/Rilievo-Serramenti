@@ -73,17 +73,19 @@ try {
                .text('Schema Posa ' + id.replace('canvas', ''));
 
             const x = 60;
-            const y = doc.y + 10;
+            const y = 100;
 
             // box bordo
             doc.rect(x, y, 470, 300).stroke();
 
             // immagine dentro box
             doc.image(imgBuffer, x + 5, y + 5, {
-                fit: [460, 290]
+            fit: [460, 290]
             });
 
-            doc.y = y + 320;
+            // spazio finale sicuro
+            doc.moveDown(20);
+            
         } catch (e) {
             console.log("Errore canvas posa", e.message);
         }
