@@ -920,22 +920,6 @@ console.log("DATI JSON:", datiStrutturati);
 formData.append('dati_json', JSON.stringify(datiStrutturati));
 
     // 3. Canvas fissi (Posa A B C D)
-['canvasA','canvasB','canvasC','canvasD'].forEach(id => {
-    const c = document.getElementById(id);
-    if (c) {
-        const img = c.toDataURL('image/png');
-
-        pdf.addPage();
-        pdf.setFontSize(14);
-        pdf.text(`Schema di posa ${id.replace('canvas', '')}`, 10, 10);
-
-        // box
-        pdf.rect(15, 20, 180, 120);
-
-        // immagine dentro il box
-        pdf.addImage(img, 'PNG', 18, 23, 174, 114);
-    }
-});
   
     // 4. Leggiamo le Foto scattate
     const inputFoto = document.querySelectorAll('input[name="foto[]"]');
@@ -1039,14 +1023,19 @@ if(note){
     y += 8;
 }
 
-    ['canvasA','canvasB','canvasC','canvasD'].forEach(id=>{
-        const c = document.getElementById(id);
-        if(c){
-            const img = c.toDataURL('image/png');
-            pdf.addPage();
-            pdf.addImage(img, 'PNG', 15, 20, 180, 0);
-        }
-    });
+    ['canvasA','canvasB','canvasC','canvasD'].forEach(id => {
+    const c = document.getElementById(id);
+    if (c) {
+        const img = c.toDataURL('image/png');
+
+        pdf.addPage();
+        pdf.setFontSize(14);
+        pdf.text(`Schema di posa ${id.replace('canvas', '')}`, 10, 10);
+
+        pdf.rect(15, 20, 180, 120);
+        pdf.addImage(img, 'PNG', 18, 23, 174, 114);
+    }
+});
 
 const scriviSezione = (titolo, lista) => {
     if(lista.length === 0) return;
