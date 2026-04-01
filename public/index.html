@@ -920,7 +920,17 @@ console.log("DATI JSON:", datiStrutturati);
 formData.append('dati_json', JSON.stringify(datiStrutturati));
 
     // 3. Canvas fissi (Posa A B C D)
-  
+    ['canvasA','canvasB','canvasC','canvasD'].forEach(id => {
+    const c = document.getElementById(id);
+    if (c) {
+        try {
+            const img = c.toDataURL('image/png');
+            if (img.length > 1000) {
+                formData.append(id, img);
+            }
+        } catch(e){}
+    }
+});
     // 4. Leggiamo le Foto scattate
     const inputFoto = document.querySelectorAll('input[name="foto[]"]');
     inputFoto.forEach(input => {
