@@ -1054,45 +1054,54 @@ const scriviSezione = (titolo, lista) => {
 
     let y = 20;
 
-    lista.forEach((el, i) => {
-        pdf.setFontSize(11);
-        const singularLabels = {
-    Serramenti: "Serramento",
-    Porte: "Porta",
-    Accessori: "Accessorio"
-};
+lista.forEach((el, i) => {
+    pdf.setFontSize(11);
 
-pdf.text(`${singularLabels[titolo]} ${i+1}: ${el.nome}`, 10, y);
+    const singularLabels = {
+        Serramenti: "Serramento",
+        Porte: "Porta",
+        Accessori: "Accessorio"
+    };
+
+    // titolo elemento
+    pdf.text(`${singularLabels[titolo]} ${i+1}: ${el.nome}`, 10, y);
+    y += 8;
+
+    // campi dinamici automatici
+    Object.entries(el).forEach(([key, value]) => {
+        if (["nome", "note", "canvas"].includes(key)) return;
+        if (!value) return;
+
+        const label = key.replace(/_/g, " ");
+        pdf.text(`${label}: ${value}`, 12, y);
         y += 6;
+    });
 
-        pdf.setFontSize(10);
+    // note
+    if (el.note) {
+        pdf.text(`Note: ${el.note}`, 12, y);
         y += 6;
+    }
 
-        if(el.note){
-            pdf.text(`Note: ${el.note}`, 10, y);
-            y += 6;
+    // canvas con bordo box
+    if (el.canvas) {
+        if (y > 210) {
+            pdf.addPage();
+            y = 10;
         }
 
-        if(el.canvas){
-        // ✅ controlla PRIMA
-    if(y > 220){
+        pdf.rect(10, y, 90, 55);
+        pdf.addImage(el.canvas, 'PNG', 12, y + 2, 86, 51);
+        y += 65;
+    }
+
+    y += 8;
+
+    if (y > 260) {
         pdf.addPage();
         y = 10;
     }
-
-    pdf.addImage(el.canvas, 'PNG', 10, y, 80, 0);
-    y += 60;
-}
-
-y += 10;
-
-// ✅ controlla anche DOPO
-if(y > 260){
-    pdf.addPage();
-    y = 10;
-}
-        
-    });
+});
 };
 
 scriviSezione('Serramenti', datiStrutturati.serramenti);
