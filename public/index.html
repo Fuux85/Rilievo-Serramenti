@@ -1056,7 +1056,13 @@ const scriviSezione = (titolo, lista) => {
 
     lista.forEach((el, i) => {
         pdf.setFontSize(11);
-        pdf.text(`${titolo.slice(0,-1)} ${i+1}: ${el.nome}`, 10, y);
+        const singularLabels = {
+    Serramenti: "Serramento",
+    Porte: "Porta",
+    Accessori: "Accessorio"
+};
+
+pdf.text(`${singularLabels[titolo]} ${i+1}: ${el.nome}`, 10, y);
         y += 6;
 
         pdf.setFontSize(10);
