@@ -95,7 +95,6 @@ const scriviSezione = (titolo, lista) => {
 doc.text(`${singularLabels[titolo]} ${i+1}: ${el.nome}`);
 
         doc.fontSize(10).font('Helvetica');
-        doc.text(`Misure: ${el.larghezza || '?'} x ${el.altezza || '?'} mm`);
 
         if (el.note) {
             doc.text(`Note: ${el.note}`);
