@@ -713,6 +713,15 @@ const sectionTemplates = {
         
         { label: "Larghezza (mm)", name: "larghezza", type: "number" },
         { label: "Altezza (mm)", name: "altezza", type: "number" }
+
+        { label: "Senso di Apertura", name: "senso_apertura", type: "text" },
+        { label: "Tipologia di Posa", name: "tipologia_posa", type: "text" },
+        { label: "Tipologia Vetro", name: "tipologia_vetro", type: "text" },
+        { label: "Vetro Ornamentale", name: "vetro_ornamentale", type: "select", options: ["Sì", "No"] },
+        { label: "Tipologia Ferramenta", name: "tipologia_ferramenta", type: "text" },
+        { label: "Altezza Maniglia", name: "altezza_maniglia", type: "text" },
+        { label: "Contatti Magnetici", name: "contatti_magnetici", type: "select", options: ["Sì", "No"] },
+        { label: "Esposizione", name: "esposizione", type: "select", options: ["Nord", "Sud", "Est", "Ovest"] }
     ],
     porte: [
         { label: "Posizione Porta", name: "nome", type: "text", required: true }
