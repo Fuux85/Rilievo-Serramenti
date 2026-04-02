@@ -736,7 +736,8 @@ function generaCampo(campo) {
         return `
             <label>${campo.label}</label>
             <select name="${campo.name}[]">
-                ${campo.options.map(o => `<option value="${o}">${o}</option>`).join("")}
+            <option value="">Seleziona</option>
+            ${campo.options.map(o => `<option value="${o}">${o}</option>`).join("")}
             </select>
         `;
     }
