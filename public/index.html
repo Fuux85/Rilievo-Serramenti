@@ -1112,6 +1112,40 @@ scriviSezione('Serramenti', datiStrutturati.serramenti);
 scriviSezione('Porte', datiStrutturati.porte);
 scriviSezione('Accessori', datiStrutturati.accessori);
 
+const comprimiImmagine = (file) => {
+    return new Promise((resolve) => {
+        const img = new Image();
+        const reader = new FileReader();
+
+        reader.onload = e => {
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+
+                const maxWidth = 1200;
+                const scale = Math.min(1, maxWidth / img.width);
+
+                canvas.width = img.width * scale;
+                canvas.height = img.height * scale;
+
+                const ctx = canvas.getContext('2d');
+
+                // sfondo bianco
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                const base64 = canvas.toDataURL('image/jpeg', 0.5);
+
+                resolve(base64);
+            };
+            img.src = e.target.result;
+        };
+
+        reader.readAsDataURL(file);
+    });
+};
+        
 // FOTO CANTIERE (OFFLINE)
 const inputFoto = document.querySelectorAll('input[name="foto[]"]');
 
@@ -1119,19 +1153,13 @@ for (let i = 0; i < inputFoto.length; i++) {
     const file = inputFoto[i].files[0];
     if (!file) continue;
 
-    const reader = new FileReader();
+    const compressed = await comprimiImmagine(file);
 
-    await new Promise((resolve) => {
-        reader.onload = function(e) {
-            pdf.addPage();
-            pdf.setFontSize(14);
-            pdf.text(`Foto Cantiere ${i + 1}`, 10, 10);
+    pdf.addPage();
+    pdf.setFontSize(14);
+    pdf.text(`Foto Cantiere ${i + 1}`, 10, 10);
 
-            pdf.addImage(e.target.result, 'JPEG', 10, 20, 180, 0);
-            resolve();
-        };
-        reader.readAsDataURL(file);
-    });
+    pdf.addImage(compressed, 'JPEG', 10, 20, 180, 0);
 }
     
     return pdf;
