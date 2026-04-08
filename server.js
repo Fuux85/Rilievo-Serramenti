@@ -1,6 +1,5 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const PDFDocument = require('pdfkit');
 const multer = require('multer');
 const axios = require('axios');
 
@@ -15,188 +14,50 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
-app.post('/invia', upload.array('foto[]'), (req, res) => {
-    const data = req.body;
-    let datiStrutturati = { serramenti: [], porte: [], accessori: [] };
+app.get('/ping', (req, res) => {
+    res.sendStatus(200);
+});
 
-try {
-    if (data.dati_json) {
-        datiStrutturati = JSON.parse(data.dati_json);
-    }
-} catch (e) {
-    console.log("Errore parsing JSON:", e.message);
+app.post('/invia', upload.single('pdf'), async (req, res) => {
+    try {
+    if (!req.file || req.file.mimetype !== 'application/pdf') {
+    return res.status(400).send("PDF non valido");
 }
-    const files = req.files || [];
 
-    console.log('=== NUOVO RILIEVO RICEVUTO (VIA API) ===');
-    
-    const doc = new PDFDocument({ bufferPages: true, margin: 30 });
-    let buffers = [];
-    doc.on('data', buffers.push.bind(buffers));
+        const pdfBuffer = req.file.buffer;
+        const base64PDF = pdfBuffer.toString('base64');
 
-    // --- COSTRUZIONE DEL PDF ---
-    doc.fontSize(20).font('Helvetica-Bold').text('Rilievo Serramenti', { align: 'center' });
-    doc.moveDown();
-    
-    // 1. INFO CANTIERE
-    doc.fontSize(14).font('Helvetica-Bold').text('Info Cantiere', { underline: true });
-    doc.fontSize(12).font('Helvetica');
-    doc.text('Data Rilievo: ' + (data.data_rilievo || 'N/A'));
-    doc.text('Tecnico: ' + (data.tecnico_incaricato || 'N/A'));
-    doc.text('Cliente: ' + (data.cliente_nome || 'N/A'));
-    doc.text('Venditore: ' + (data.venditore || 'N/A'));
-    doc.text('Indirizzo: ' + (data.indirizzo_cliente || 'N/A'));
-    doc.text('Piano: ' + (data.piano || 'N/A'));
-    
-    doc.moveDown(0.5);
-    doc.font('Helvetica-Bold').text('Logistica e Accesso:');
-    doc.font('Helvetica');
-    doc.text('- Autoscala: ' + (data.autoscala || 'Non specificato'));
-    doc.text('- Occupazione suolo pubblico: ' + (data.occupazione_suolo || 'Non specificato'));
-    doc.text('- Ascensore: ' + (data.ascensore || 'Non specificato'));
-    doc.text('- ZTL: ' + (data.ztl || 'Non specificato'));
-    doc.moveDown(1.5);
-    doc.font('Helvetica-Bold').text('Annotazioni Cantiere:');
-    doc.font('Helvetica').text(data.note_cantiere || 'Nessuna annotazione particolare.');
-    doc.moveDown();
+        const data = req.body;
+        const oggi = new Date().toLocaleDateString('it-IT');
 
-    // 2. SCHEMI DI POSA (Canvas A, B, C, D)
-['canvasA', 'canvasB', 'canvasC', 'canvasD'].forEach(function(id) {
-    if (data[id] && data[id].includes('base64')) {
-        try {
-            const base64Data = data[id].replace(/^data:image\/png;base64,/, '');
-            const imgBuffer = Buffer.from(base64Data, 'base64');
-
-            doc.addPage();
-            doc.fontSize(14)
-               .font('Helvetica-Bold')
-               .text('Schema Posa ' + id.replace('canvas', ''));
-
-            const x = 60;
-            const y = 100;
-
-            // box bordo
-            doc.rect(x, y, 470, 300).stroke();
-
-            // immagine dentro box
-            doc.image(imgBuffer, x + 5, y + 5, {
-            fit: [460, 290]
-            });
-
-            // spazio finale sicuro
-            doc.moveDown(20);
-            
-        } catch (e) {
-            console.log("Errore canvas posa", e.message);
-        }
-    }
-});
-
-// 3. GESTIONE ELEMENTI DINAMICI (VERSIONE JSON - CORRETTA)
-
-const scriviSezione = (titolo, lista) => {
-    if (!lista || lista.length === 0) return;
-
-    doc.addPage();
-    doc.fontSize(16).font('Helvetica-Bold').text(titolo, { underline: true });
-    doc.moveDown();
-
-lista.forEach((el, i) => {
-    if (!el.nome) return;
-
-    const singularLabels = {
-        Serramenti: "Serramento",
-        Porte: "Porta",
-        Accessori: "Accessorio"
-    };
-
-    doc.moveDown();
-    doc.fontSize(12).font('Helvetica-Bold');
-    doc.text(`${singularLabels[titolo]} ${i + 1}: ${el.nome}`);
-
-    // campi dinamici automatici
-    Object.entries(el).forEach(([key, value]) => {
-        if (["nome", "note", "canvas"].includes(key)) return;
-        if (!value) return;
-
-        const label = key.replace(/_/g, " ");
-        doc.fontSize(10).font('Helvetica');
-        doc.text(`${label}: ${value}`, { indent: 10 });
-    });
-
-    // note
-    if (el.note) {
-        doc.fontSize(10).font('Helvetica');
-        doc.text(`Note: ${el.note}`, { indent: 10 });
-    }
-
-    // canvas con bordo
-    if (el.canvas && el.canvas.includes('base64')) {
-        try {
-            const base64 = el.canvas.replace(/^data:image\/png;base64,/, '');
-            const imgBuffer = Buffer.from(base64, 'base64');
-
-            const x = 60;
-            const yBox = doc.y + 5;
-
-            doc.rect(x, yBox, 220, 140).stroke();
-            doc.image(imgBuffer, x + 5, yBox + 5, {
-                fit: [210, 130]
-            });
-
-            // spazio sicuro dopo il box
-            doc.moveDown(10);
-            
-        } catch (e) {
-            console.log("Errore immagine:", e.message);
-        }
-    }
-
-    doc.moveDown();
-});
-};
-
-// ✅ chiamate corrette
-scriviSezione('Serramenti', datiStrutturati.serramenti);
-scriviSezione('Porte', datiStrutturati.porte);
-scriviSezione('Accessori', datiStrutturati.accessori);
-
-    // 4. FOTO CANTIERE
-    if (files && files.length > 0) {
-        files.forEach(function(file, idx) {
-            try {
-                doc.addPage();
-                doc.fontSize(14).font('Helvetica-Bold').text('Foto Cantiere ' + (idx + 1));
-                doc.image(file.buffer, { fit: [500, 600], align: 'center' });
-            } catch (e) { console.log("Errore inserimento foto:", e.message); }
+        await axios.post('https://api.brevo.com/v3/smtp/email', {
+            sender: { 
+                name: "App Rilievi", 
+                email: "arredoinfissitorino@gmail.com" 
+            },
+            to: [{ email: "arredoinfissitorino@gmail.com" }],
+            subject: `Rilievo ${data.cliente_nome || "Cliente"} - ${oggi}`,
+            textContent: "Rilievo generato da app",
+            attachment: [
+                { 
+                    content: base64PDF, 
+                    name: `Rilievo_${data.cliente_nome || "cliente"}.pdf` 
+                }
+            ]
+        }, {
+            headers: { 
+                'api-key': process.env.BREVO_API_KEY, 
+                'Content-Type': 'application/json' 
+            }
         });
+
+        console.log("✅ Email inviata!");
+        res.send("PDF inviato correttamente!");
+
+    } catch (error) {
+        console.error("Errore invio:", error.response?.data || error.message);
+        res.status(500).send("Errore invio email");
     }
-
-    doc.end();
-
-    // INVIO UNICO TRAMITE BREVO
-    doc.on('end', async () => {
-        try {
-            const pdfBuffer = Buffer.concat(buffers);
-            const base64PDF = pdfBuffer.toString('base64');
-
-            await axios.post('https://api.brevo.com/v3/smtp/email', {
-                sender: { name: "App Rilievi", email: "arredoinfissitorino@gmail.com" },
-                to: [{ email: "arredoinfissitorino@gmail.com" }],
-                subject: "Rilievo: " + (data.cliente_nome || "Senza Nome"),
-                textContent: "In allegato il rilievo tecnico di " + (data.cliente_nome || "N/A"),
-                attachment: [{ content: base64PDF, name: "Rilievo_" + (data.cliente_nome || "cliente") + ".pdf" }]
-            }, {
-                headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' }
-            });
-
-            console.log("Email inviata con successo!");
-            if (!res.headersSent) res.send("PDF inviato correttamente via email!");
-        } catch (error) {
-            console.error("Errore Brevo:", error.response ? error.response.data : error.message);
-            if (!res.headersSent) res.status(500).send("Errore nell'invio dell'email.");
-        }
-    });
 });
 
 const PORT = process.env.PORT || 3000;
