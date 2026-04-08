@@ -721,7 +721,20 @@ const sectionTemplates = {
         { label: "Tipologia Ferramenta", name: "tipologia_ferramenta", type: "text" },
         { label: "Altezza Maniglia (mm)", name: "altezza_maniglia", type: "number" },
         { label: "Contatti Magnetici", name: "contatti_magnetici", type: "select", options: ["Sì", "No"] },
-        { label: "Esposizione", name: "esposizione", type: "select", options: ["Nord", "Sud", "Est", "Ovest"] }
+        { label: "Esposizione", name: "esposizione", type: "select", options: ["Nord", "Sud", "Est", "Ovest"] },
+
+        {
+        label: "Avvolgibili",
+        name: "avvolgibili",
+        type: "select",
+        options: ["Sì", "No"],
+        conditionalFields: [
+            { label: "Larghezza Avvolgibili (mm)", name: "avvolgibili_larghezza", type: "number" },
+            { label: "Altezza Avvolgibili (mm)", name: "avvolgibili_altezza", type: "number" },
+            { label: "Comando Avvolgibili", name: "comando_avvolgibili", type: "select", options: ["Cinghia", "Motore"] }
+        ]
+    }
+      
     ],
     porte: [
         { label: "Posizione Porta", name: "nome", type: "text", required: true }
@@ -732,24 +745,47 @@ const sectionTemplates = {
 };
 
 function generaCampo(campo) {
+    let html = "";
+
     if (campo.type === "select") {
-        return `
+        html += `
             <label>${campo.label}</label>
-            <select name="${campo.name}[]">
-            <option value="">Seleziona</option>
-            ${campo.options.map(o => `<option value="${o}">${o}</option>`).join("")}
+            <select 
+                name="${campo.name}[]" 
+                ${campo.conditionalFields ? `onchange="toggleConditionalFields(this, '${campo.name}')"` : ""}
+            >
+                <option value="">Seleziona</option>
+                ${campo.options.map(o => `<option value="${o}">${o}</option>`).join("")}
             </select>
+        `;
+    } else {
+        html += `
+            <label>${campo.label}</label>
+            <input 
+                type="${campo.type}" 
+                name="${campo.name}[]" 
+                ${campo.required ? "required" : ""}
+            >
         `;
     }
 
-    return `
-        <label>${campo.label}</label>
-        <input 
-            type="${campo.type}" 
-            name="${campo.name}[]" 
-            ${campo.required ? "required" : ""}
-        >
-    `;
+    if (campo.conditionalFields) {
+        html += `
+            <div class="conditional-fields" data-field="${campo.name}" style="display:none; margin-top:10px;">
+                ${campo.conditionalFields.map(sub => generaCampo(sub)).join("")}
+            </div>
+        `;
+    }
+
+    return html;
+}
+
+function toggleConditionalFields(select, fieldName) {
+    const wrapper = select.closest("div");
+    const conditional = wrapper.querySelector(`.conditional-fields[data-field="${fieldName}"]`);
+    if (!conditional) return;
+
+    conditional.style.display = select.value === "Sì" ? "block" : "none";
 }
 
 function creaElemento(tipo) {
@@ -893,14 +929,15 @@ const raccogliElementi = (containerId) => {
     const blocchi = document.querySelectorAll(`#container_${containerId} .serramento-wrapper`);
 
     blocchi.forEach(blocco => {
-        const nome = blocco.querySelector('input[name$="nome[]"]')?.value || "";
-        if (!nome.trim()) return;
+        const obj = {};
 
-        const larghezza = blocco.querySelector('input[name$="larghezza[]"]')?.value || "";
-        const altezza = blocco.querySelector('input[name$="altezza[]"]')?.value || "";
-        const note = blocco.querySelector('textarea[name$="note[]"]')?.value || "";
+        blocco.querySelectorAll("input, select, textarea").forEach(campo => {
+            if (!campo.name) return;
+            const key = campo.name.replace("[]", "");
+            obj[key] = campo.value || "";
+        });
 
-       const canvas = blocco.querySelector('canvas[id^="canvas_"]');
+        const canvas = blocco.querySelector('canvas[id^="canvas_"]');
         let canvasBase64 = "";
 
         if (canvas) {
@@ -910,13 +947,11 @@ const raccogliElementi = (containerId) => {
             } catch(e){}
         }
 
-        elementi.push({
-            nome,
-            larghezza,
-            altezza,
-            note,
-            canvas: canvasBase64
-        });
+        obj.canvas = canvasBase64;
+
+        if (obj.nome && obj.nome.trim()) {
+            elementi.push(obj);
+        }
     });
 
     return elementi;
