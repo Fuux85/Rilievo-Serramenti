@@ -903,111 +903,65 @@ document.getElementById('rilievoForm').addEventListener('submit', async function
     btn.textContent = "Invio in corso... attendi...";
     btn.disabled = true;
 
-    // Creiamo un pacco vuoto da zero (molto più sicuro per gli smartphone!)
-    const formData = new FormData();
+     const pdf = await generaPdfUnico();
+    const blob = pdf.output('blob');
 
-    // 1. Leggiamo i dati base del cantiere (Step 1)
-    const campiBase = [
-        'data_rilievo', 'tecnico_incaricato', 'cliente_nome', 'venditore', 
-        'indirizzo_cliente', 'piano', 'note_cantiere'
-    ];
-    campiBase.forEach(id => {
-        const el = form.querySelector(`[name="${id}"]`);
-        if(el) formData.append(id, el.value);
-    });
+try {
+    // 1. genera PDF sempre
 
-    // Radio button
-    ['autoscala', 'occupazione_suolo', 'ascensore', 'ztl'].forEach(nome => {
-        const checked = form.querySelector(`input[name="${nome}"]:checked`);
-        if(checked) formData.append(nome, checked.value);
-    });
 
-// 2. RACCOLTA DATI DINAMICI (VERSIONE PRO)
+    // 2. controlla connessione reale
+    const isOnline = await checkOnline();
 
-const raccogliElementi = (containerId) => {
-    const elementi = [];
-    const blocchi = document.querySelectorAll(`#container_${containerId} .serramento-wrapper`);
+    if (isOnline) {
+        const formData = new FormData();
 
-    blocchi.forEach(blocco => {
-        const obj = {};
+        // invia SOLO il PDF
+        formData.append('pdf', blob, 'rilievo.pdf');
 
-        blocco.querySelectorAll("input, select, textarea").forEach(campo => {
-            if (!campo.name) return;
-            const key = campo.name.replace("[]", "");
-            obj[key] = campo.value || "";
-        });
+        // dati utili per email
+        const cliente = document.querySelector('[name="cliente_nome"]').value;
+        formData.append('cliente_nome', cliente);
 
-        const canvas = blocco.querySelector('canvas[id^="canvas_"]');
-        let canvasBase64 = "";
-
-        if (canvas) {
-            try {
-                const img = canvas.toDataURL('image/png');
-                if (img.length > 1000) canvasBase64 = img;
-            } catch(e){}
-        }
-
-        obj.canvas = canvasBase64;
-
-        if (obj.nome && obj.nome.trim()) {
-            elementi.push(obj);
-        }
-    });
-
-    return elementi;
-};
-
-const datiStrutturati = {
-    serramenti: raccogliElementi('serramenti'),
-    porte: raccogliElementi('porte'),
-    accessori: raccogliElementi('accessori')
-};
-
-// 👇 invio unico JSON
-console.log("DATI JSON:", datiStrutturati);
-formData.append('dati_json', JSON.stringify(datiStrutturati));
-
-    // 3. Canvas fissi (Posa A B C D)
-    ['canvasA','canvasB','canvasC','canvasD'].forEach(id => {
-    const c = document.getElementById(id);
-    if (c) {
-        try {
-            const img = c.toDataURL('image/png');
-            if (img.length > 1000) {
-                formData.append(id, img);
-            }
-        } catch(e){}
-    }
-});
-    // 4. Leggiamo le Foto scattate
-    const inputFoto = document.querySelectorAll('input[name="foto[]"]');
-    inputFoto.forEach(input => {
-        if(input.files && input.files[0]) {
-            formData.append('foto[]', input.files[0]); // Rimette le foto nel faldone!
-        }
-    });
-
-    try {
-        const url = form.action || '/invia';
-        const resp = await fetch(url, {
+        const resp = await fetch(form.action || '/invia', {
             method: 'POST',
-            body: formData // Spedisce il faldone compilato a mano!
+            body: formData
         });
-        
+
         const resultText = await resp.text();
-        alert(resultText);
-        
-    } catch(err) {
-        console.error('Errore invio:', err);
-        alert('Errore di connessione. Salvataggio locale...');
-        generaPdfLocale();
-    } finally {
+        alert("✅ Inviato correttamente!");
+
+    } else {
+        throw new Error("Offline");
+    }
+
+} catch(err) {
+    console.warn("Modalità offline:", err);
+
+
+
+    // prova condivisione (smartphone)
+if (navigator.share && navigator.canShare && navigator.canShare({
+    files: [new File([blob],'rilievo.pdf',{type:'application/pdf'})]
+})) {
+    try {
+        await navigator.share({
+            files:[new File([blob],'rilievo.pdf',{type:'application/pdf'})],
+            title:'Rilievo Serramenti'
+        });
+        return;
+    } catch(e) {}
+}
+
+    // fallback download
+    pdf.save('rilievo.pdf');
+}finally {
         btn.textContent = originalText;
         btn.disabled = false;
     }
 });
 
-async function generaPdfLocale(){
+    async function generaPdfUnico(){
     const { jsPDF } = window.jspdf;
     function raccogliElementiOffline(containerId) {
     const elementi = [];
@@ -1028,7 +982,7 @@ async function generaPdfLocale(){
 
         if (canvas) {
             try {
-                const base64 = canvas.toDataURL("image/png");
+                const base64 = canvas.toDataURL('image/jpeg', 0.7);
                 if (base64.length > 1000) img = base64;
             } catch (e) {}
         }
@@ -1180,20 +1134,18 @@ for (let i = 0; i < inputFoto.length; i++) {
     });
 }
     
-    const blob = pdf.output('blob');
-    if(navigator.share && navigator.canShare && navigator.canShare({files:[new File([blob],'rilievo.pdf',{type:'application/pdf'})]})){
-        try{
-            await navigator.share({
-                files:[new File([blob],'rilievo.pdf',{type:'application/pdf'})],
-                title:'Rilievo Serramenti',
-                text:'Documento generato localmente'
-            });
-            return;
-        } catch(e){ console.warn('Condivisione fallita',e); }
-    }
-
-    pdf.save('rilievo.pdf');
+    return pdf;
 }
+
+async function checkOnline() {
+    try {
+        await fetch('/ping', { method: 'HEAD', cache: 'no-store' });
+        return true;
+    } catch {
+        return false;
+    }
+}
+        
 </script>
 </body>
 </html>
