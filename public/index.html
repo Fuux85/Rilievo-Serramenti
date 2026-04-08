@@ -1121,7 +1121,7 @@ const comprimiImmagine = (file) => {
             img.onload = () => {
                 const canvas = document.createElement('canvas');
 
-                const maxWidth = 1200;
+                const maxWidth = 800;
                 const scale = Math.min(1, maxWidth / img.width);
 
                 canvas.width = img.width * scale;
