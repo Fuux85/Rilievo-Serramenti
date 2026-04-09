@@ -1040,6 +1040,12 @@ if (canvas) {
     return elementi;
 }
 
+const datiStrutturati = {
+    serramenti: raccogliElementiOffline('serramenti'),
+    porte: raccogliElementiOffline('porte'),
+    accessori: raccogliElementiOffline('accessori')
+};
+        
     const pdf = new jsPDF({unit:'mm', format:'a4'});
 let y = 15;
 
