@@ -980,6 +980,27 @@ function comprimiCanvas(canvas, maxWidth = 1000, quality = 0.45) {
 
     return tempCanvas.toDataURL("image/jpeg", quality);
 }
+
+async function caricaImmagineBase64(url) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "Anonymous";
+
+        img.onload = function () {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.width;
+            canvas.height = img.height;
+
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+
+            resolve(canvas.toDataURL("image/png"));
+        };
+
+        img.onerror = reject;
+        img.src = url;
+    });
+}
     
     async function generaPdfUnico(){
     const { jsPDF } = window.jspdf;
@@ -1019,22 +1040,57 @@ if (canvas) {
 }
 
     const pdf = new jsPDF({unit:'mm', format:'a4'});
-    let y = 10;
-    const datiStrutturati = {
-    serramenti: raccogliElementiOffline('serramenti'),
-    porte: raccogliElementiOffline('porte'),
-    accessori: raccogliElementiOffline('accessori')
-};
-    pdf.setFontSize(16);
-    pdf.text('Rilievo Serramenti', 105, y, { align: 'center' });
-    y += 10;
-    pdf.setFontSize(12);
+let y = 15;
+
+// sfondo header
+pdf.setFillColor(248, 248, 248);
+pdf.rect(0, 0, 210, 42, "F");
+
+// logo aziendale
+try {
+    const logoBase64 = await caricaImmagineBase64("https://www.arredoinfissitorino.net/wp-content/uploads/2024/04/ARREDOINFISSI-logo-vettoriale-scaled.webp");
+    pdf.addImage(logoBase64, "PNG", 10, 6, 45, 16);
+} catch(e) {
+    console.warn("Logo non caricato", e);
+}
+
+// titolo principale
+pdf.setFont("helvetica", "bold");
+pdf.setFontSize(22);
+pdf.text("Rilievo Serramenti", 105, 20, { align: "center" });
+
+// linea separatrice
+pdf.setDrawColor(180);
+pdf.line(10, 32, 200, 32);
+
+// spazio sotto header
+y = 42;
+
+pdf.setFont("helvetica", "normal");
+pdf.setFontSize(11);
 // DATI PRINCIPALI
-const fields = ['data_rilievo','tecnico_incaricato','cliente_nome','venditore','indirizzo_cliente','piano'];
-fields.forEach(name=>{
+const labels = {
+    data_rilievo: "Data Rilievo",
+    tecnico_incaricato: "Tecnico Incaricato",
+    cliente_nome: "Cliente",
+    venditore: "Venditore",
+    indirizzo_cliente: "Indirizzo Cliente",
+    piano: "Piano Abitazione"
+};
+
+const fields = Object.keys(labels);
+
+fields.forEach(name => {
     const el = document.querySelector(`[name="${name}"]`);
-    if(el) pdf.text(`${name.replace(/_/g,' ')}: ${el.value}`, 10, y);
-    y += 6;
+    if (!el) return;
+
+    pdf.setFont("helvetica", "bold");
+    pdf.text(`${labels[name]}:`, 10, y);
+
+    pdf.setFont("helvetica", "normal");
+    pdf.text(el.value || "-", 60, y);
+
+    y += 8;
 });
 
 // LOGISTICA (radio)
@@ -1079,52 +1135,54 @@ const scriviSezione = (titolo, lista) => {
     let y = 20;
 
 lista.forEach((el, i) => {
-    pdf.setFontSize(11);
+pdf.setFontSize(11);
 
-    const singularLabels = {
-        Serramenti: "Serramento",
-        Porte: "Porta",
-        Accessori: "Accessorio"
-    };
+const singularLabels = {
+    Serramenti: "Serramento",
+    Porte: "Porta",
+    Accessori: "Accessorio"
+};
 
-    // titolo elemento
-    pdf.text(`${singularLabels[titolo]} ${i+1}: ${el.nome}`, 10, y);
-    y += 8;
+// controllo spazio pagina
+if (y > 220) {
+    pdf.addPage();
+    y = 15;
+}
 
-    // campi dinamici automatici
-    Object.entries(el).forEach(([key, value]) => {
-        if (["nome", "note", "canvas"].includes(key)) return;
-        if (!value) return;
+// BOX ESTERNO SCHEDA
+pdf.setDrawColor(180);
+pdf.rect(10, y, 190, 65);
 
-        const label = key.replace(/_/g, " ");
-        pdf.text(`${label}: ${value}`, 12, y);
-        y += 6;
-    });
+// titolo scheda
+pdf.setFont("helvetica", "bold");
+pdf.text(`${singularLabels[titolo]} ${i + 1}: ${el.nome}`, 14, y + 8);
 
-    // note
-    if (el.note) {
-        pdf.text(`Note: ${el.note}`, 12, y);
-        y += 6;
-    }
+let textY = y + 16;
 
-    // canvas con bordo box
-    if (el.canvas) {
-        if (y > 210) {
-            pdf.addPage();
-            y = 10;
-        }
+// campi a sinistra
+pdf.setFont("helvetica", "normal");
+Object.entries(el).forEach(([key, value]) => {
+    if (["nome", "note", "canvas"].includes(key)) return;
+    if (!value) return;
 
-        pdf.rect(10, y, 90, 55);
-        pdf.addImage(el.canvas, 'PNG', 12, y + 2, 86, 51);
-        y += 65;
-    }
+    const label = key.replace(/_/g, " ");
+    pdf.text(`${label}: ${value}`, 14, textY);
+    textY += 6;
+});
 
-    y += 8;
+// canvas a destra
+if (el.canvas) {
+    pdf.rect(125, y + 10, 65, 45);
+    pdf.addImage(el.canvas, 'JPEG', 127, y + 12, 61, 41);
+}
 
-    if (y > 260) {
-        pdf.addPage();
-        y = 10;
-    }
+// note sotto
+if (el.note) {
+    pdf.setFont("helvetica", "italic");
+    pdf.text(`Note: ${el.note}`, 14, y + 58);
+}
+
+y += 75;
 });
 };
 
