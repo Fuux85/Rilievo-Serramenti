@@ -781,8 +781,10 @@ function generaCampo(campo) {
 }
 
 function toggleConditionalFields(select, fieldName) {
-    const wrapper = select.closest("div");
-    const conditional = wrapper.querySelector(`.conditional-fields[data-field="${fieldName}"]`);
+    const conditional = select.parentElement.querySelector(
+        `.conditional-fields[data-field="${fieldName}"]`
+    );
+
     if (!conditional) return;
 
     conditional.style.display = select.value === "Sì" ? "block" : "none";
@@ -1121,7 +1123,7 @@ const comprimiImmagine = (file) => {
             img.onload = () => {
                 const canvas = document.createElement('canvas');
 
-                const maxWidth = 800;
+                const maxWidth = 1200;
                 const scale = Math.min(1, maxWidth / img.width);
 
                 canvas.width = img.width * scale;
