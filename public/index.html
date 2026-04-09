@@ -1118,17 +1118,24 @@ if(note){
     y += 8;
 }
 
-    ['canvasA','canvasB','canvasC','canvasD'].forEach(id => {
+// Ciclo per i 4 schemi di posa (A, B, C, D)
+['canvasA','canvasB','canvasC','canvasD'].forEach(id => {
     const c = document.getElementById(id);
-    if (c) {
+    
+    // CONTROLLO CRITICO: 
+    // Generiamo la pagina solo se il canvas esiste E se ci sono dati salvati (disegni)
+    if (c && typeof canvasStore !== 'undefined' && canvasStore[id] && canvasStore[id].length > 0) {
+        
+        // Trasformiamo il disegno in un'immagine leggera per il PDF
         const img = comprimiCanvas(c, 1200, 0.45);
 
-        pdf.addPage();
+        pdf.addPage(); // Aggiunge una nuova pagina solo se serve
         pdf.setFontSize(14);
         pdf.text(`Schema di posa ${id.replace('canvas', '')}`, 10, 10);
 
+        // Disegna un bordo e inserisce l'immagine
         pdf.rect(15, 20, 180, 120);
-        pdf.addImage(img, 'PNG', 18, 23, 174, 114);
+        pdf.addImage(img, 'JPEG', 18, 23, 174, 114);
     }
 });
 
