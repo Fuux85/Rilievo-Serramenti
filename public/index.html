@@ -897,71 +897,67 @@ aggiungiFoto();
 
 document.getElementById('rilievoForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    
+
     const form = e.target;
     const btn = form.querySelector('button[type="submit"]');
     const originalText = btn.textContent;
-    
+
     btn.textContent = "Invio in corso... attendi...";
     btn.disabled = true;
 
-     const pdf = await generaPdfUnico();
-    const blob = pdf.output('blob');
+    let pdf;
+    let blob;
 
-try {
-    // 1. genera PDF sempre
-
-
-    // 2. controlla connessione reale
-    const isOnline = await checkOnline();
-
-    if (isOnline) {
-        const formData = new FormData();
-
-        // invia SOLO il PDF
-        formData.append('pdf', blob, 'rilievo.pdf');
-
-        // dati utili per email
-        const cliente = document.querySelector('[name="cliente_nome"]').value;
-        formData.append('cliente_nome', cliente);
-
-        const resp = await fetch(form.action || '/invia', {
-            method: 'POST',
-            body: formData
-        });
-
-        const resultText = await resp.text();
-        alert("✅ Inviato correttamente!");
-
-    } else {
-        throw new Error("Offline");
-    }
-
-} catch(err) {
-    console.warn("Modalità offline:", err);
-
-
-
-    // prova condivisione (smartphone)
-if (navigator.share && navigator.canShare && navigator.canShare({
-    files: [new File([blob],'rilievo.pdf',{type:'application/pdf'})]
-})) {
     try {
-        await navigator.share({
-            files:[new File([blob],'rilievo.pdf',{type:'application/pdf'})],
-            title:'Rilievo Serramenti'
-        });
-        return;
-    } catch(e) {}
-}
+        pdf = await generaPdfUnico();
+        blob = pdf.output('blob');
 
-// fallback download
-        pdf.save('rilievo.pdf');
-    } 
-} finally {
-    btn.textContent = originalText;
-    btn.disabled = false;
-}
+        const isOnline = await checkOnline();
+
+        if (isOnline) {
+            const formData = new FormData();
+            formData.append('pdf', blob, 'rilievo.pdf');
+
+            const cliente = document.querySelector('[name="cliente_nome"]').value;
+            formData.append('cliente_nome', cliente);
+
+            await fetch(form.action || '/invia', {
+                method: 'POST',
+                body: formData
+            });
+
+            alert("✅ Inviato correttamente!");
+        } else {
+            throw new Error("Offline");
+        }
+
+    } catch (err) {
+        console.warn("Modalità offline:", err);
+
+        const file = new File([blob], 'rilievo.pdf', {
+            type: 'application/pdf'
+        });
+
+        if (
+            navigator.share &&
+            navigator.canShare &&
+            navigator.canShare({ files: [file] })
+        ) {
+            try {
+                await navigator.share({
+                    files: [file],
+                    title: 'Rilievo Serramenti'
+                });
+                return;
+            } catch (e) {}
+        }
+
+        if (pdf) pdf.save('rilievo.pdf');
+
+    } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+    }
 });
 
 function comprimiCanvas(canvas, maxWidth = 1000, quality = 0.45) {
