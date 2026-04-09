@@ -963,6 +963,24 @@ if (navigator.share && navigator.canShare && navigator.canShare({
     }
 });
 
+function comprimiCanvas(canvas, maxWidth = 1000, quality = 0.45) {
+    const tempCanvas = document.createElement("canvas");
+    const scale = Math.min(1, maxWidth / canvas.width);
+
+    tempCanvas.width = canvas.width * scale;
+    tempCanvas.height = canvas.height * scale;
+
+    const ctx = tempCanvas.getContext("2d");
+
+    // sfondo bianco
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+    ctx.drawImage(canvas, 0, 0, tempCanvas.width, tempCanvas.height);
+
+    return tempCanvas.toDataURL("image/jpeg", quality);
+}
+    
     async function generaPdfUnico(){
     const { jsPDF } = window.jspdf;
     function raccogliElementiOffline(containerId) {
@@ -980,14 +998,14 @@ if (navigator.share && navigator.canShare && navigator.canShare({
         });
 
         const canvas = blocco.querySelector("canvas");
-        let img = "";
+let img = "";
 
-        if (canvas) {
-            try {
-                const base64 = canvas.toDataURL('image/png');
-                if (base64.length > 1000) img = base64;
-            } catch (e) {}
-        }
+if (canvas) {
+    try {
+        const base64 = comprimiCanvas(canvas, 1000, 0.45);
+        if (base64.length > 1000) img = base64;
+    } catch (e) {}
+}
 
         obj.canvas = img;
 
@@ -1040,7 +1058,7 @@ if(note){
     ['canvasA','canvasB','canvasC','canvasD'].forEach(id => {
     const c = document.getElementById(id);
     if (c) {
-        const img = c.toDataURL('image/png');
+        const img = comprimiCanvas(c, 1200, 0.45);
 
         pdf.addPage();
         pdf.setFontSize(14);
