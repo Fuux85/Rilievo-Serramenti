@@ -955,12 +955,13 @@ if (navigator.share && navigator.canShare && navigator.canShare({
     } catch(e) {}
 }
 
-    // fallback download
-    pdf.save('rilievo.pdf');
-}finally {
-        btn.textContent = originalText;
-        btn.disabled = false;
-    }
+// fallback download
+        pdf.save('rilievo.pdf');
+    } 
+} finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+}
 });
 
 function comprimiCanvas(canvas, maxWidth = 1000, quality = 0.45) {
