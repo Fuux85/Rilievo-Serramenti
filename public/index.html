@@ -1059,12 +1059,10 @@ let y = 15;
 // sfondo header
 
 
-// logo aziendale
+// carico logo una volta sola
+let logoBase64 = "";
 try {
-    const logoBase64 = await caricaImmagineBase64(LOGO_URL);
-
-    // più largo e proporzionato
-    pdf.addImage(logoBase64, "JPEG", 60, 5, 90, 18);
+    logoBase64 = await caricaImmagineBase64(LOGO_URL);
 } catch(e) {
     console.warn("Logo non caricato", e);
 }
@@ -1293,7 +1291,36 @@ for (let i = 0; i < inputFoto.length; i++) {
 
     pdf.addImage(compressed, 'JPEG', 10, 20, 160, 0);
 }
-    
+
+    const totalPages = pdf.getNumberOfPages();
+
+for (let page = 1; page <= totalPages; page++) {
+    pdf.setPage(page);
+
+    // logo header su tutte le pagine
+    if (logoBase64) {
+        pdf.addImage(
+            logoBase64,
+            "JPEG",
+            10,
+            6,
+            65,
+            20,
+            undefined,
+            "FAST"
+        );
+    }
+
+    // numero pagina footer
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(
+        `Pagina ${page} di ${totalPages}`,
+        105,
+        290,
+        { align: "center" }
+    );
+}    
     return pdf;
 }
 
