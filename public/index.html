@@ -1187,28 +1187,33 @@ const singularLabels = {
     Accessori: "Accessorio"
 };
 
+// calcolo dinamico altezza contenuto
+const campiDaStampare = Object.entries(el).filter(([key, value]) =>
+    !["nome", "note", "canvas"].includes(key) && value
+);
+
+const righeCampi = campiDaStampare.length;
+let boxHeight = Math.max(70, 20 + (righeCampi * 6) + (el.note ? 12 : 0));
+
 // controllo spazio pagina
-if (y > 220) {
+if (y + boxHeight > 270) {
     pdf.addPage();
     y = 15;
 }
 
-// BOX ESTERNO SCHEDA
+// BOX ESTERNO
 pdf.setDrawColor(180);
-pdf.rect(10, y, 190, 105);
+pdf.rect(10, y, 190, boxHeight);
 
-// titolo scheda
+// titolo
 pdf.setFont("helvetica", "bold");
 pdf.text(`${singularLabels[titolo]} ${i + 1}: ${el.nome}`, 14, y + 8);
 
 let textY = y + 16;
 
-// campi a sinistra
+// campi dinamici
 pdf.setFont("helvetica", "normal");
-Object.entries(el).forEach(([key, value]) => {
-    if (["nome", "note", "canvas"].includes(key)) return;
-    if (!value) return;
-
+campiDaStampare.forEach(([key, value]) => {
     const label = key.replace(/_/g, " ");
     pdf.text(`${label}: ${value}`, 14, textY);
     textY += 6;
@@ -1220,13 +1225,18 @@ if (el.canvas) {
     pdf.addImage(el.canvas, 'JPEG', 127, y + 12, 61, 41);
 }
 
-// note sotto
+// note SEMPRE sotto i campi
 if (el.note) {
+    textY += 2;
     pdf.setFont("helvetica", "italic");
-    pdf.text(`Note: ${el.note}`, 14, y + 58);
+
+    const noteLines = pdf.splitTextToSize(`Note: ${el.note}`, 105);
+    pdf.text(noteLines, 14, textY);
 }
 
-y += 75;
+// avanzamento dinamico
+y += boxHeight + 10;
+    
 });
 };
 
