@@ -221,7 +221,7 @@ input[type="radio"][value="No"]:checked + span {
 <body>
 
 <div class="header">
-<img src="/logo.png" alt="Arredoinfissi Torino" class="logo">
+<img id="logoHeader" alt="Arredoinfissi Torino" class="logo">
 <h1>Modulo Rilievo Serramenti</h1>
 </div>
 
@@ -425,6 +425,9 @@ input[type="radio"][value="No"]:checked + span {
 <script>
 /* === SCRIPT INTEGRATO COMPLETO === */
 
+const LOGO_URL = "https://raw.githubusercontent.com/Fuux85/Rilievo-Serramenti/main/public/logo.png";
+document.getElementById("logoHeader").src = LOGO_URL;
+    
 let selectedPath = ''; // Variabile per salvare la scelta del percorso
 
 document.body.addEventListener("touchstart", function(e){
@@ -1050,7 +1053,7 @@ pdf.rect(0, 0, 210, 42, "F");
 
 // logo aziendale
 try {
-    const logoBase64 = await caricaImmagineBase64("/logo.png");
+    const logoBase64 = await caricaImmagineBase64(LOGO_URL);
     pdf.addImage(logoBase64, "PNG", 10, 6, 45, 16);
 } catch(e) {
     console.warn("Logo non caricato", e);
