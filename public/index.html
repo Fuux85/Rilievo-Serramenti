@@ -1057,8 +1057,7 @@ const datiStrutturati = {
 let y = 15;
 
 // sfondo header
-pdf.setFillColor(248, 248, 248);
-pdf.rect(0, 0, 210, 42, "F");
+
 
 // logo aziendale
 try {
@@ -1073,10 +1072,10 @@ try {
 // titolo principale
 pdf.setFont("helvetica", "bold");
 pdf.setFontSize(22);
-pdf.text("Rilievo Serramenti", 105, 30, { align: "center" });
+pdf.text("Rilievo Serramenti", 105, 40, { align: "center" });
 
 // linea separatrice
-pdf.setDrawColor(180);
+pdf.setDrawColor(100);
 pdf.line(10, 32, 200, 32);
 
 // spazio sotto header
