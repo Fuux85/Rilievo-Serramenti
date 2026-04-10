@@ -1287,7 +1287,7 @@ for (let i = 0; i < inputFoto.length; i++) {
 
     pdf.addPage();
     pdf.setFontSize(14);
-    pdf.text(`Foto Cantiere ${i + 1}`, 10, 10);
+    pdf.text(`Foto Cantiere ${i + 1}`, 10, 40);
 
     pdf.addImage(compressed, 'JPEG', 10, 20, 160, 0);
 }
