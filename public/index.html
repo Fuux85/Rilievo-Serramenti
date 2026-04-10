@@ -1103,10 +1103,11 @@ fields.forEach(name => {
     pdf.text(`${labels[name]}:`, 10, y);
 
     pdf.setFont("helvetica", "normal");
-    pdf.text(el.value || "-", 60, y);
+    pdf.text(el.value || "-", 80, y);
 
     y += 8;
 });
+y += 6; // spazio extra prima dei radio button
 
 // LOGISTICA (radio) - stile uniforme
 const radioLabels = {
@@ -1124,10 +1125,11 @@ Object.keys(radioLabels).forEach(nome => {
     pdf.text(`${radioLabels[nome]}:`, 10, y);
 
     pdf.setFont("helvetica", "normal");
-    pdf.text(val, 60, y);
+    pdf.text(val, 80, y);
 
     y += 8;
 });
+y += 6; // spazio extra prima delle note
 
 // NOTE CANTIERE - stesso stile
 const note = document.querySelector('[name="note_cantiere"]')?.value || "";
