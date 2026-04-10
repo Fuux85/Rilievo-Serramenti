@@ -1000,6 +1000,34 @@ async function caricaImmagineBase64(url) {
         img.src = url;
     });
 }
+
+function comprimiBase64(base64, maxWidth = 500, quality = 0.35) {
+    const img = new Image();
+    img.src = base64;
+
+    const canvas = document.createElement("canvas");
+    const scale = Math.min(1, maxWidth / 1000);
+
+    canvas.width = 1000 * scale;
+    canvas.height = 300 * scale;
+
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    return new Promise(resolve => {
+        img.onload = function() {
+            const ratio = img.height / img.width;
+            const width = canvas.width;
+            const height = width * ratio;
+
+            canvas.height = height;
+
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL("image/jpeg", quality));
+        };
+    });
+}
     
     async function generaPdfUnico(){
     const { jsPDF } = window.jspdf;
@@ -1054,7 +1082,12 @@ pdf.rect(0, 0, 210, 42, "F");
 // logo aziendale
 try {
     const logoBase64 = await caricaImmagineBase64(LOGO_URL);
-    pdf.addImage(logoBase64, "PNG", 10, 6, 45, 16);
+
+    // Compressione forte del logo
+    const logoCompresso = comprimiBase64(logoBase64, 500, 0.35);
+
+    // più largo e proporzionato
+    pdf.addImage(logoCompresso, "JPEG", 10, 5, 60, 18);
 } catch(e) {
     console.warn("Logo non caricato", e);
 }
