@@ -1108,22 +1108,42 @@ fields.forEach(name => {
     y += 8;
 });
 
-// LOGISTICA (radio)
-['autoscala','occupazione_suolo','ascensore','ztl'].forEach(nome => {
+// LOGISTICA (radio) - stile uniforme
+const radioLabels = {
+    autoscala: "Autoscala",
+    occupazione_suolo: "Occupazione Suolo Pubblico",
+    ascensore: "Ascensore",
+    ztl: "ZTL"
+};
+
+Object.keys(radioLabels).forEach(nome => {
     const checked = document.querySelector(`input[name="${nome}"]:checked`);
     const val = checked ? checked.value : "Non specificato";
-    pdf.text(`${nome.replace(/_/g,' ')}: ${val}`, 10, y);
-    y += 6;
+
+    pdf.setFont("helvetica", "bold");
+    pdf.text(`${radioLabels[nome]}:`, 10, y);
+
+    pdf.setFont("helvetica", "normal");
+    pdf.text(val, 60, y);
+
+    y += 8;
 });
 
-// NOTE CANTIERE
+// NOTE CANTIERE - stesso stile
 const note = document.querySelector('[name="note_cantiere"]')?.value || "";
-if(note){
-    y += 4;
-    pdf.text("Note cantiere:", 10, y);
+if (note) {
+    y += 2;
+
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Note Cantiere:", 10, y);
+
     y += 6;
-    pdf.text(note, 10, y);
-    y += 8;
+
+    pdf.setFont("helvetica", "normal");
+    const noteLines = pdf.splitTextToSize(note, 140);
+    pdf.text(noteLines, 10, y);
+
+    y += noteLines.length * 6;
 }
 
 // Ciclo per i 4 schemi di posa (A, B, C, D)
