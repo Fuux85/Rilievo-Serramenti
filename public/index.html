@@ -221,8 +221,7 @@ input[type="radio"][value="No"]:checked + span {
 <body>
 
 <div class="header">
-<img src="https://www.arredoinfissitorino.net/wp-content/uploads/2024/04/ARREDOINFISSI-logo-vettoriale-scaled.webp" 
-alt="Arredoinfissi Torino" class="logo">
+<img src="/logo.png" alt="Arredoinfissi Torino" class="logo">
 <h1>Modulo Rilievo Serramenti</h1>
 </div>
 
@@ -1051,7 +1050,7 @@ pdf.rect(0, 0, 210, 42, "F");
 
 // logo aziendale
 try {
-    const logoBase64 = await caricaImmagineBase64("https://www.arredoinfissitorino.net/wp-content/uploads/2024/04/ARREDOINFISSI-logo-vettoriale-scaled.webp");
+    const logoBase64 = await caricaImmagineBase64("/logo.png");
     pdf.addImage(logoBase64, "PNG", 10, 6, 45, 16);
 } catch(e) {
     console.warn("Logo non caricato", e);
