@@ -1065,7 +1065,7 @@ try {
     const logoBase64 = await caricaImmagineBase64(LOGO_URL);
 
     // più largo e proporzionato
-    pdf.addImage(logoBase64, "JPEG", 10, 5, 65, 18);
+    pdf.addImage(logoBase64, "JPEG", 60, 5, 90, 18);
 } catch(e) {
     console.warn("Logo non caricato", e);
 }
