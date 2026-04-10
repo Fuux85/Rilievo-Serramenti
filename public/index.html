@@ -1054,7 +1054,7 @@ const datiStrutturati = {
 };
         
     const pdf = new jsPDF({unit:'mm', format:'a4'});
-let y = 40;
+let y = 50;
 
 // sfondo header
 
@@ -1159,7 +1159,7 @@ if (note) {
 
         pdf.addPage(); // Aggiunge una nuova pagina solo se serve
         pdf.setFontSize(14);
-        pdf.text(`Schema di posa ${id.replace('canvas', '')}`, 10, 40);
+        pdf.text(`Schema di posa ${id.replace('canvas', '')}`, 10, 50);
 
         // Disegna un bordo e inserisce l'immagine
         pdf.rect(15, 20, 180, 120);
@@ -1196,7 +1196,7 @@ let boxHeight = Math.max(70, 20 + (righeCampi * 6) + (el.note ? 12 : 0));
 // controllo spazio pagina
 if (y + boxHeight > 270) {
     pdf.addPage();
-    y = 40;
+    y = 50;
 }
 
 // BOX ESTERNO
@@ -1287,7 +1287,7 @@ for (let i = 0; i < inputFoto.length; i++) {
 
     pdf.addPage();
     pdf.setFontSize(14);
-    pdf.text(`Foto Cantiere ${i + 1}`, 10, 40);
+    pdf.text(`Foto Cantiere ${i + 1}`, 10, 50);
 
     pdf.addImage(compressed, 'JPEG', 10, 20, 160, 0);
 }
