@@ -1158,12 +1158,16 @@ if (note) {
         const img = comprimiCanvas(c, 1200, 0.45);
 
         pdf.addPage(); // Aggiunge una nuova pagina solo se serve
-        pdf.setFontSize(14);
-        pdf.text(`Schema di posa ${id.replace('canvas', '')}`, 10, 50);
+        const startY = drawHeader(pdf);
 
-        // Disegna un bordo e inserisce l'immagine
-        pdf.rect(15, 20, 180, 120);
-        pdf.addImage(img, 'JPEG', 18, 23, 174, 114);
+        // titolo vicino al logo
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(14);
+        pdf.text(`Schema di Posa ${id.replace('canvas', '')}`, 10, 32);
+
+        // box e immagine più in basso
+        pdf.rect(15, startY + 8, 180, 120);
+        pdf.addImage(img, 'JPEG', 18, startY + 11, 174, 114);
     }
 });
 
@@ -1171,10 +1175,13 @@ const scriviSezione = (titolo, lista) => {
     if(lista.length === 0) return;
 
     pdf.addPage();
-    pdf.setFontSize(14);
-    pdf.text(titolo, 10, 10);
+    const startY = drawHeader(pdf);
 
-    let y = 20;
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(14);
+    pdf.text(titolo, 10, startY);
+
+let y = startY + 12;
 
 lista.forEach((el, i) => {
 pdf.setFontSize(11);
@@ -1196,7 +1203,8 @@ let boxHeight = Math.max(70, 20 + (righeCampi * 6) + (el.note ? 12 : 0));
 // controllo spazio pagina
 if (y + boxHeight > 270) {
     pdf.addPage();
-    y = 50;
+    const pageStartY = drawHeader(pdf);
+    y = pageStartY + 12;
 }
 
 // BOX ESTERNO
@@ -1286,10 +1294,13 @@ for (let i = 0; i < inputFoto.length; i++) {
     const compressed = await comprimiImmagine(file);
 
     pdf.addPage();
-    pdf.setFontSize(14);
-    pdf.text(`Foto Cantiere ${i + 1}`, 10, 50);
+const fotoStartY = drawHeader(pdf);
 
-    pdf.addImage(compressed, 'JPEG', 10, 20, 160, 0);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(14);
+    pdf.text(`Foto Cantiere ${i + 1}`, 10, fotoStartY);
+
+    pdf.addImage(compressed, 'JPEG', 10, fotoStartY + 10, 160, 0);
 }
 
     const totalPages = pdf.getNumberOfPages();
