@@ -1146,6 +1146,23 @@ if (note) {
     y += noteLines.length * 6;
 }
 
+function drawHeader(pdf) {
+    if (logoBase64) {
+        pdf.addImage(
+            logoBase64,
+            "JPEG",
+            52,
+            5,
+            105,
+            16,
+            undefined,
+            "FAST"
+        );
+    }
+
+    return 38;
+}
+        
 // Ciclo per i 4 schemi di posa (A, B, C, D)
 ['canvasA','canvasB','canvasC','canvasD'].forEach(id => {
     const c = document.getElementById(id);
