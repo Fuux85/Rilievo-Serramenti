@@ -1288,43 +1288,50 @@ const comprimiImmagine = (file) => {
     });
 };
         
-// FOTO CANTIERE (OFFLINE)
+// FOTO CANTIERE (2 per pagina verticali)
 const inputFoto = document.querySelectorAll('input[name="foto[]"]');
 
-for (let i = 0; i < inputFoto.length; i++) {
-    const file = inputFoto[i].files[0];
-    if (!file) continue;
+const photoWidth = 130;
+const photoHeight = 90;
+const photoX = (210 - photoWidth) / 2; // centrata
 
-    const compressed = await comprimiImmagine(file);
+for (let i = 0; i < inputFoto.length; i += 2) {
 
     pdf.addPage();
-const fotoStartY = drawHeader(pdf);
+    const fotoStartY = drawHeader(pdf);
 
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(14);
-    pdf.text(`Foto Cantiere ${i + 1}`, 10, fotoStartY);
+    pdf.text("Foto Cantiere", 105, fotoStartY, { align: "center" });
 
-    pdf.addImage(compressed, 'JPEG', 10, fotoStartY + 10, 160, 0);
-}
-
-    const totalPages = pdf.getNumberOfPages();
-
-for (let page = 1; page <= totalPages; page++) {
-    pdf.setPage(page);
-
-    // logo header su tutte le pagine
-    if (logoBase64) {
+    // FOTO 1 (sopra)
+    const file1 = inputFoto[i].files[0];
+    if (file1) {
+        const compressed1 = await comprimiImmagine(file1);
         pdf.addImage(
-            logoBase64,
-            "JPEG",
-            52,
-            5,
-            105,
-            16,
-            undefined,
-            "FAST"
+            compressed1,
+            'JPEG',
+            photoX,
+            fotoStartY + 10,
+            photoWidth,
+            photoHeight
         );
     }
+
+    // FOTO 2 (sotto)
+    const file2 = inputFoto[i + 1]?.files[0];
+    if (file2) {
+        const compressed2 = await comprimiImmagine(file2);
+        pdf.addImage(
+            compressed2,
+            'JPEG',
+            photoX,
+            fotoStartY + 110,
+            photoWidth,
+            photoHeight
+        );
+    }
+}
 
     // numero pagina footer
     pdf.setFontSize(10);
