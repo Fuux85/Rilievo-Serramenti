@@ -1287,6 +1287,19 @@ const comprimiImmagine = (file) => {
         reader.readAsDataURL(file);
     });
 };
+
+function getImageDimensions(base64) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            resolve({
+                width: img.width,
+                height: img.height
+            });
+        };
+        img.src = base64;
+    });
+}
         
 // FOTO CANTIERE (2 per pagina verticali)
 const inputFoto = document.querySelectorAll('input[name="foto[]"]');
@@ -1308,27 +1321,53 @@ for (let i = 0; i < inputFoto.length; i += 2) {
     const file1 = inputFoto[i].files[0];
     if (file1) {
         const compressed1 = await comprimiImmagine(file1);
+        const dim1 = await getImageDimensions(compressed1);
+
+        const ratio1 = dim1.width / dim1.height;
+        let w1 = photoWidth;
+        let h1 = w1 / ratio1;
+
+        if (h1 > photoHeight) {
+        h1 = photoHeight;
+        w1 = h1 * ratio1;
+}
+
+        const x1 = (210 - w1) / 2;
+
         pdf.addImage(
             compressed1,
             'JPEG',
-            photoX,
+            x1,
             fotoStartY + 10,
-            photoWidth,
-            photoHeight
-        );
+            w1,
+            h1
+          );
     }
 
     // FOTO 2 (sotto)
     const file2 = inputFoto[i + 1]?.files[0];
     if (file2) {
         const compressed2 = await comprimiImmagine(file2);
+        const dim2 = await getImageDimensions(compressed2);
+
+        const ratio2 = dim2.width / dim2.height;
+        let w2 = photoWidth;
+        let h2 = w2 / ratio2;
+
+        if (h2 > photoHeight) {
+        h2 = photoHeight;
+        w2 = h2 * ratio2;
+}
+
+        const x2 = (210 - w2) / 2;
+
         pdf.addImage(
             compressed2,
             'JPEG',
-            photoX,
+            x2,
             fotoStartY + 110,
-            photoWidth,
-            photoHeight
+            w2,
+            h2
         );
     }
 }
