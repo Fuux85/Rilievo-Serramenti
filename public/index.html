@@ -1333,6 +1333,25 @@ for (let i = 0; i < inputFoto.length; i += 2) {
     }
 }
 
+const totalPages = pdf.getNumberOfPages();
+
+for (let page = 1; page <= totalPages; page++) {
+    pdf.setPage(page);
+
+    // logo header su tutte le pagine
+    if (logoBase64) {
+        pdf.addImage(
+            logoBase64,
+            "JPEG",
+            52,
+            5,
+            105,
+            16,
+            undefined,
+            "FAST"
+        );
+    }
+        
     // numero pagina footer
     pdf.setFontSize(10);
     pdf.setFont("helvetica", "normal");
