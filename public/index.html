@@ -1022,7 +1022,20 @@ async function caricaImmagineBase64(url) {
         img.src = url;
     });
 }
-   
+
+function getImageDimensions(base64) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            resolve({
+                width: img.width,
+                height: img.height
+            });
+        };
+        img.src = base64;
+    });
+}
+    
     async function generaPdfUnico(){
     const { jsPDF } = window.jspdf;
     function raccogliElementiOffline(containerId) {
@@ -1301,18 +1314,7 @@ const comprimiImmagine = (file) => {
     });
 };
 
-function getImageDimensions(base64) {
-    return new Promise((resolve) => {
-        const img = new Image();
-        img.onload = () => {
-            resolve({
-                width: img.width,
-                height: img.height
-            });
-        };
-        img.src = base64;
-    });
-}
+
         
 // FOTO CANTIERE (2 per pagina verticali)
 const inputFoto = document.querySelectorAll('input[name="foto[]"]');
