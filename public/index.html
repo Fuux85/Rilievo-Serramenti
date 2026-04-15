@@ -733,12 +733,18 @@ const sectionTemplates = {
         
         { label: "Ispezione Avvolgibili", name: "Ispezione_Avvolgibili", type: "select", options: ["Sì", "No"],
         conditionalFields:
-            [ { label: "Scegli Tipologia", name: "scegli_tipologia", type: "select", options: ["Cielino", "Cassonetto", "Tappo"] },
+            [ { label: "Scegli Tipologia", name: "Tipologia", type: "select", options: ["Cielino", "Cassonetto", "Tappo"] },
               { label: "Larghezza (mm)", name: "Larghezza", type: "number" },
               { label: "Altezza (mm)", name: "Altezza", type: "number" },
-              { label: "Profondità (mm)", name: "Profondità", type: "number" }
+              { label: "Profondità (mm)", name: "Profondità", type: "number" },
         
-        ]}
+        ] }
+
+                { label: "Coibentazioni", name: "Coibentazioni", type: "select", options: ["Sì", "No"],
+        conditionalFields:
+            [ { label: "Scegli Tipologia", name: "Tipologia", type: "select", options: ["Termiche", "Acustiche", "Termiche + Acustiche"] }
+                      
+        ] }
 
 
         
