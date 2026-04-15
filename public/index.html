@@ -727,9 +727,9 @@ const sectionTemplates = {
 
         { label: "Avvolgibili", name: "Avvolgibili", type: "select", options: ["Sì", "No"],
         conditionalFields:
-            [{ label: "Larghezza Avvolgibili (mm)", name: "Larghezza_Avvolgibili", type: "number" },
-             { label: "Altezza Avvolgibili (mm)", name: "Altezza_Avvolgibili", type: "number" },
-             { label: "Comando Avvolgibili", name: "Comando_Avvolgibili", type: "select", options: ["Cinghia", "Motore"] }]},
+            [{ label: "Larghezza (mm)", name: "Larghezza_Avvolgibili", type: "number" },
+             { label: "Altezza (mm)", name: "Altezza_Avvolgibili", type: "number" },
+             { label: "Comando", name: "Comando_Avvolgibili", type: "select", options: ["Cinghia", "Motore"] }]},
         
         { label: "Ispezione Avvolgibili", name: "Ispezione_Avvolgibili", type: "select", options: ["Sì", "No"],
         conditionalFields:
@@ -742,17 +742,43 @@ const sectionTemplates = {
 
                 { label: "Coibentazioni", name: "Coibentazioni", type: "select", options: ["Sì", "No"],
         conditionalFields:
-            [ { label: "Scegli Tipologia", name: "Tipologia", type: "select", options: ["Termiche", "Acustiche", "Termiche + Acustiche"] }
+            [ { label: "Scegli Tipologia", name: "Tipologia_Coibentazioni", type: "select", options: ["Termiche", "Acustiche", "Termiche + Acustiche"] }
                       
-        ] }
+        ] },
 
+                { label: "Persiane", name: "Persiane", type: "select", options: ["Sì", "No"],
+        conditionalFields:
+            [ { label: "Tipologia Persiana", name: "Tipologia_Persiana", type: "text" , placeholder: "es. Con Telaio, Cardini a Muro, Etc.." },
+              { label: "Larghezza (mm)", name: "Larghezza_Persiana", type: "number" },
+              { label: "Altezza (mm)", name: "Altezza_Persiana", type: "number" } 
+             
+         ] },
+        
+
+             { label: "Zanzariere", name: "Zanzariere", type: "select", options: ["Sì", "No"],
+        conditionalFields:
+            [ { label: "Tipologia Zanzariera", name: "Tipologia_Zanzariera", type: "text" , placeholder: "es. Fissa, Laterale, Verticale, Etc.." },
+              { label: "Larghezza (mm)", name: "Larghezza_Zanzariera", type: "number" },
+              { label: "Altezza (mm)", name: "Altezza_Zanzariera", type: "number"} 
+             
+         ] },
 
         
-      
+
+                { label: "Grate", name: "Grate", type: "select", options: ["Sì", "No"],
+        conditionalFields:
+            [ { label: "Tipologia Grata", name: "Tipologia_Grata", type: "text" , placeholder: "es. Fissa, A Snodo, Etc.." },
+              { label: "Larghezza (mm)", name: "Larghezza_Grata", type: "number" },
+              { label: "Altezza (mm)", name: "Altezza_Grata", type: "number" }
+             
+            ] }
+             
     ],
+    
     porte: [
         { label: "Posizione Porta", name: "nome", type: "text", required: true }
     ],
+    
     accessori: [
         { label: "Nome Accessorio", name: "nome", type: "text", required: true }
     ]
