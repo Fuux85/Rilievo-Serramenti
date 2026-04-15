@@ -864,7 +864,19 @@ function aggiungiFoto() {
 
     wrapper.innerHTML = `
     <h3>Foto ${fotoCount}</h3>
-    <input type="file" name="foto[]" accept="image/*" capture="environment" onchange="previewFoto(this, ${fotoCount})">
+    <input 
+    type="file" 
+    id="foto${fotoCount}"
+    name="foto[]" 
+    accept="image/*" 
+    capture="environment"
+    onchange="previewFoto(this, ${fotoCount})"
+    style="display:none;"
+>
+
+<button type="button" onclick="document.getElementById('foto${fotoCount}').click()">
+    📸 Scatta Foto
+</button>
     <img id="preview${fotoCount}" style="max-width: 100%; max-height: 300px; display: none;">
     `;
     container.appendChild(wrapper);
