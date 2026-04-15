@@ -1252,14 +1252,8 @@ function drawHeader(pdf) {
 const scriviSezione = (titolo, lista) => {
     if(lista.length === 0) return;
 
-    pdf.addPage();
-    const startY = drawHeader(pdf);
-
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(14);
-    pdf.text(titolo, 10, startY);
-
-let y = startY + 12;
+    let firstPage = true;
+let y = 0;
 
 lista.forEach((el, i) => {
 pdf.setFontSize(11);
@@ -1279,10 +1273,16 @@ const righeCampi = campiDaStampare.length;
 let boxHeight = Math.max(70, 20 + (righeCampi * 6) + (el.note ? 12 : 0));
 
 // controllo spazio pagina
-if (y + boxHeight > 270) {
+if (firstPage || y + boxHeight > 260) {
     pdf.addPage();
     const pageStartY = drawHeader(pdf);
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(14);
+    pdf.text(titolo, 10, pageStartY);
+
     y = pageStartY + 12;
+    firstPage = false;
 }
 
 // BOX ESTERNO
