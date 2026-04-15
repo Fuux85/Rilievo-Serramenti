@@ -725,17 +725,23 @@ const sectionTemplates = {
         { label: "Contatti Magnetici", name: "contatti_magnetici", type: "select", options: ["Sì", "No"] },
         { label: "Esposizione", name: "esposizione", type: "select", options: ["Nord", "Sud", "Est", "Ovest"] },
 
-        {
-        label: "Avvolgibili",
-        name: "avvolgibili",
-        type: "select",
-        options: ["Sì", "No"],
-        conditionalFields: [
-            { label: "Larghezza Avvolgibili (mm)", name: "avvolgibili_larghezza", type: "number" },
-            { label: "Altezza Avvolgibili (mm)", name: "avvolgibili_altezza", type: "number" },
-            { label: "Comando Avvolgibili", name: "comando_avvolgibili", type: "select", options: ["Cinghia", "Motore"] }
-        ]
-    }
+        { label: "Avvolgibili", name: "avvolgibili", type: "select", options: ["Sì", "No"],
+        conditionalFields:
+            [{ label: "Larghezza Avvolgibili (mm)", name: "avvolgibili_larghezza", type: "number" },
+             { label: "Altezza Avvolgibili (mm)", name: "avvolgibili_altezza", type: "number" },
+             { label: "Comando Avvolgibili", name: "comando_avvolgibili", type: "select", options: ["Cinghia", "Motore"] }]},
+        
+        { label: "Cielini Cassonetti e Tappi", name: "cielinicassonettitappi", type: "select", options: ["Sì", "No"],
+        conditionalFields:
+            [ { label: "Scegli Tipologia", name: "cielinicassonettitappi_sceglitipologia", type: "select", options: ["Cielino", "Cassonetto", "Tappo"] }
+              { label: "Larghezza (mm)", name: "cielinicassonettitappi_larghezza", type: "number" },
+              { label: "Altezza (mm)", name: "cielinicassonettitappi_altezza", type: "number" },
+              { label: "Profondità (mm)", name: "cielinicassonettitappi_profondita", type: "number" },
+        
+        ]}
+
+
+        
       
     ],
     porte: [
