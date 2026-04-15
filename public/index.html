@@ -713,30 +713,30 @@ const sectionTemplates = {
     serramenti: [
         { label: "Posizione", name: "nome", type: "text", required: true },
         
-        { label: "Larghezza (mm)", name: "larghezza", type: "number" },
-        { label: "Altezza (mm)", name: "altezza", type: "number" },
+        { label: "Larghezza (mm)", name: "Larghezza", type: "number" },
+        { label: "Altezza (mm)", name: "Altezza", type: "number" },
 
-        { label: "Senso di Apertura", name: "senso_apertura", type: "text" },
-        { label: "Tipologia di Posa", name: "tipologia_posa", type: "text" },
-        { label: "Tipologia Vetro", name: "tipologia_vetro", type: "text" },
-        { label: "Vetro Ornamentale", name: "vetro_ornamentale", type: "select", options: ["Sì", "No"] },
-        { label: "Tipologia Ferramenta", name: "tipologia_ferramenta", type: "text" },
-        { label: "Altezza Maniglia (mm)", name: "altezza_maniglia", type: "number" },
-        { label: "Contatti Magnetici", name: "contatti_magnetici", type: "select", options: ["Sì", "No"] },
-        { label: "Esposizione", name: "esposizione", type: "select", options: ["Nord", "Sud", "Est", "Ovest"] },
+        { label: "Senso di Apertura", name: "Senso_Apertura", type: "text" },
+        { label: "Tipologia di Posa", name: "Tipologia_Posa", type: "text" },
+        { label: "Tipologia Vetro", name: "Tipologia_Vetro", type: "text" },
+        { label: "Vetro Ornamentale", name: "Vetro_Ornamentale", type: "select", options: ["Sì", "No"] },
+        { label: "Tipologia Ferramenta", name: "Tipologia_Ferramenta", type: "text" },
+        { label: "Altezza Maniglia (mm)", name: "Altezza_Maniglia", type: "number" },
+        { label: "Contatti Magnetici", name: "Contatti_Magnetici", type: "select", options: ["Sì", "No"] },
+        { label: "Esposizione", name: "Esposizione", type: "select", options: ["Nord", "Sud", "Est", "Ovest"] },
 
         { label: "Avvolgibili", name: "Avvolgibili", type: "select", options: ["Sì", "No"],
         conditionalFields:
-            [{ label: "Larghezza Avvolgibili (mm)", name: "larghezza", type: "number" },
-             { label: "Altezza Avvolgibili (mm)", name: "altezza", type: "number" },
-             { label: "Comando Avvolgibili", name: "comando", type: "select", options: ["Cinghia", "Motore"] }]},
+            [{ label: "Larghezza Avvolgibili (mm)", name: "Larghezza", type: "number" },
+             { label: "Altezza Avvolgibili (mm)", name: "Altezza", type: "number" },
+             { label: "Comando Avvolgibili", name: "Comando", type: "select", options: ["Cinghia", "Motore"] }]},
         
-        { label: "Cielini Cassonetti e Tappi", name: "cielinicassonettitappi", type: "select", options: ["Sì", "No"],
+        { label: "Ispezione Avvolgibili", name: "Ispezione_Avvolgibili", type: "select", options: ["Sì", "No"],
         conditionalFields:
             [ { label: "Scegli Tipologia", name: "scegli_tipologia", type: "select", options: ["Cielino", "Cassonetto", "Tappo"] },
-              { label: "Larghezza (mm)", name: "larghezza", type: "number" },
-              { label: "Altezza (mm)", name: "altezza", type: "number" },
-              { label: "Profondità (mm)", name: "profondità", type: "number" }
+              { label: "Larghezza (mm)", name: "Larghezza", type: "number" },
+              { label: "Altezza (mm)", name: "Altezza", type: "number" },
+              { label: "Profondità (mm)", name: "Profondità", type: "number" }
         
         ]}
 
