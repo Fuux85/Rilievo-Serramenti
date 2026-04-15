@@ -717,7 +717,7 @@ const sectionTemplates = {
         { label: "Altezza (mm)", name: "Altezza", type: "number" },
 
         { label: "Senso di Apertura", name: "Senso_Apertura", type: "text" },
-        { label: "Tipologia di Posa", name: "Tipologia_Posa", type: "text" },
+        { label: "Tipologia di Posa", name: "Tipologia_Posa", type: "text" , placeholder: "es. Posa A, Posa B, Etc.." },
         { label: "Tipologia Vetro", name: "Tipologia_Vetro", type: "text" },
         { label: "Vetro Ornamentale", name: "Vetro_Ornamentale", type: "select", options: ["Sì", "No"] },
         { label: "Tipologia Ferramenta", name: "Tipologia_Ferramenta", type: "text" },
@@ -779,6 +779,7 @@ function generaCampo(campo) {
                 type="${campo.type}" 
                 name="${campo.name}[]" 
                 ${campo.required ? "required" : ""}
+                placeholder="${campo.placeholder || ''}"
             >
         `;
     }
