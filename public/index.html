@@ -1084,63 +1084,183 @@ document.getElementById('rilievoForm').addEventListener('submit', async function
     const btn = form.querySelector('button[type="submit"]');
     const originalText = btn.textContent;
 
-    btn.textContent = "Invio in corso... attendi...";
+    btn.textContent = "Generazione PDF...";
     btn.disabled = true;
 
-    let pdf;
-    let blob;
+    let pdf = null;
+    let blob = null;
 
     try {
+
+        // 1. GENERA IL PDF
+        console.log("📄 Generazione PDF iniziata...");
+
         pdf = await generaPdfUnico();
+
+        if (!pdf) {
+            throw new Error("Il PDF non è stato generato.");
+        }
+
         blob = pdf.output('blob');
+
+        if (!blob || blob.size === 0) {
+            throw new Error("Il PDF generato è vuoto.");
+        }
+
+        console.log("✅ PDF generato:", blob.size, "byte");
+
+
+        // 2. CONTROLLA LA CONNESSIONE
+        btn.textContent = "Verifica connessione...";
 
         const isOnline = await checkOnline();
 
-        if (isOnline) {
-            const formData = new FormData();
-            formData.append('pdf', blob, 'rilievo.pdf');
+        console.log("🌐 Connessione:", isOnline);
 
-            const cliente = document.querySelector('[name="cliente_nome"]').value;
-            formData.append('cliente_nome', cliente);
+        if (!isOnline) {
+            throw new Error("OFFLINE");
+        }
 
-            await fetch(form.action || '/invia', {
+
+        // 3. PREPARA L'INVIO
+        btn.textContent = "Invio in corso... attendi...";
+
+        const formData = new FormData();
+
+        formData.append(
+            'pdf',
+            blob,
+            'rilievo.pdf'
+        );
+
+        const cliente = document.querySelector(
+            '[name="cliente_nome"]'
+        )?.value || "cliente";
+
+        formData.append(
+            'cliente_nome',
+            cliente
+        );
+
+
+        // 4. INVIA AL SERVER
+        console.log("📤 Invio PDF al server...");
+
+        const response = await fetch(
+            form.action || '/invia',
+            {
                 method: 'POST',
                 body: formData
-            });
+            }
+        );
 
-            alert("✅ Inviato correttamente!");
-        } else {
-            throw new Error("Offline");
+
+        // 5. CONTROLLA LA RISPOSTA DEL SERVER
+        console.log(
+            "📡 Risposta server:",
+            response.status,
+            response.statusText
+        );
+
+        if (!response.ok) {
+
+            const erroreServer = await response.text();
+
+            console.error(
+                "❌ Errore server:",
+                response.status,
+                erroreServer
+            );
+
+            throw new Error(
+                `Errore server ${response.status}: ${erroreServer}`
+            );
         }
+
+
+        // 6. TUTTO OK
+        const risposta = await response.text();
+
+        console.log(
+            "✅ Server ha risposto:",
+            risposta
+        );
+
+        alert("✅ PDF inviato correttamente!");
+
 
     } catch (err) {
-        console.warn("Modalità offline:", err);
 
-        const file = new File([blob], 'rilievo.pdf', {
-            type: 'application/pdf'
-        });
+        console.error("❌ ERRORE:", err);
 
-        if (
-            navigator.share &&
-            navigator.canShare &&
-            navigator.canShare({ files: [file] })
-        ) {
-            try {
-                await navigator.share({
-                    files: [file],
-                    title: 'Rilievo Serramenti'
-                });
-                return;
-            } catch (e) {}
+
+        // 7. SE L'INVIO FALLISCE,
+        // PROVA A SALVARE/CONDIVIDERE IL PDF
+        if (blob) {
+
+            const file = new File(
+                [blob],
+                'rilievo.pdf',
+                {
+                    type: 'application/pdf'
+                }
+            );
+
+
+            // Condivisione su smartphone / iPad
+            if (
+                navigator.share &&
+                navigator.canShare &&
+                navigator.canShare({ files: [file] })
+            ) {
+
+                try {
+
+                    await navigator.share({
+                        files: [file],
+                        title: 'Rilievo Serramenti'
+                    });
+
+                    return;
+
+                } catch (shareError) {
+
+                    console.warn(
+                        "Condivisione annullata:",
+                        shareError
+                    );
+                }
+            }
+
+
+            // Se non è possibile condividere,
+            // salva il PDF
+            if (pdf) {
+                pdf.save('rilievo.pdf');
+            }
+
+            alert(
+                "⚠️ Non è stato possibile inviare il PDF al server.\n\n" +
+                "Il PDF è stato salvato sul dispositivo."
+            );
+
+        } else {
+
+            alert(
+                "❌ Errore durante la generazione del PDF.\n\n" +
+                err.message
+            );
         }
 
-        if (pdf) pdf.save('rilievo.pdf');
 
     } finally {
+
         btn.textContent = originalText;
         btn.disabled = false;
+
     }
 });
+
 
 function comprimiCanvas(canvas, maxWidth = 1000, quality = 0.45) {
     const tempCanvas = document.createElement("canvas");
