@@ -707,6 +707,32 @@ const sectionTitles = {
     accessori: "Posizione"
 };
 
+const informazioniGeneraliSerramenti = [
+    {
+        label: "Tipologia Serramenti",
+        name: "tipologia_serramenti",
+        type: "select",
+        options: ["Albertone", "Finstral", "Altro"],
+        specificaAltro: true
+    },
+    {
+        label: "Colore Interno",
+        name: "colore_interno",
+        type: "text"
+    },
+    {
+        label: "Colore Esterno",
+        name: "colore_esterno",
+        type: "text"
+    },
+    {
+        label: "Tipologia e Colore Maniglia",
+        name: "maniglia",
+        type: "text"
+    }
+];
+
+    
 const sectionTemplates = {
     serramenti: [
         { label: "Posizione", name: "nome", type: "text", required: true },
@@ -848,7 +874,7 @@ function toggleConditionalFields(select, fieldName) {
 
 function creaElemento(tipo) {
     const container = document.querySelector(`#container_${tipo} .items-list`);
-    const numero = container.children.length + 1;
+    const numero = container.querySelectorAll('.serramento-wrapper').length + 1;
     const canvasId = `canvas_${tipo}_${Date.now()}`;
 
     const campi = sectionTemplates[tipo];
@@ -856,10 +882,26 @@ function creaElemento(tipo) {
 
     let campiHtml = campi.map(c => generaCampo(c)).join("");
 
+    
     const wrapper = document.createElement("div");
     wrapper.className = "serramento-wrapper";
     wrapper.style = "border:1px solid #ccc; padding:15px; margin-bottom:20px; background:#fff;";
 
+// La sezione generale viene creata una sola volta
+if (tipo === "serramenti" && container.children.length === 0) {
+    const infoWrapper = document.createElement("div");
+
+    infoWrapper.style = "border:1px solid #ccc; padding:15px; margin-bottom:20px; background:#f8f9fa;";
+
+    infoWrapper.innerHTML = `
+        <h3>Informazioni Generali Serramenti</h3>
+        ${informazioniGeneraliSerramenti.map(c => generaCampo(c)).join("")}
+    `;
+
+    container.appendChild(infoWrapper);
+}
+
+    
     wrapper.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <h3 class="titolo-dinamico">${sectionTitles[tipo]} ${numero}</h3>
