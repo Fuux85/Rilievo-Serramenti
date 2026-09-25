@@ -1343,8 +1343,9 @@ campiDaStampare.forEach(([key, value]) => {
         textY += 8;
     }
 
-    const label = key.replace(/_/g, " ");
+    const label = campoTemplate?.label || key.replace(/_/g, " ");
     pdf.text(`${label}: ${value}`, 14, textY);
+
     textY += 6;
 });
 
