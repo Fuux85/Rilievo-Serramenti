@@ -1284,7 +1284,18 @@ const campiTemplate = sectionTemplates[tipoSezione[titolo]];
 
     
 const righeCampi = campiDaStampare.length;
-let boxHeight = Math.max(70, 20 + (righeCampi * 6) + (el.note ? 12 : 0));
+
+// Calcola gli spazi aggiuntivi dei campi con spazioPrima
+const spaziExtra = campiDaStampare.reduce((totale, [key]) => {
+    const campoTemplate = campiTemplate.find(c => c.name === key);
+    return totale + (campoTemplate?.spazioPrima ? 8 : 0);
+}, 0);
+
+let boxHeight = Math.max(
+    70,
+    20 + (righeCampi * 6) + spaziExtra + (el.note ? 12 : 0)
+);
+
 
 // controllo spazio pagina
 if (firstPage || y + boxHeight > 260) {
