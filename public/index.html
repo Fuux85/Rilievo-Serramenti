@@ -1273,7 +1273,16 @@ const singularLabels = {
 const campiDaStampare = Object.entries(el).filter(([key, value]) =>
     !["nome", "note", "canvas"].includes(key) && value
 );
+const tipoSezione = {
+    "Serramenti": "serramenti",
+    "Porte": "porte",
+    "Accessori": "accessori"
+};
 
+const campiTemplate = sectionTemplates[tipoSezione[titolo]];
+
+
+    
 const righeCampi = campiDaStampare.length;
 let boxHeight = Math.max(70, 20 + (righeCampi * 6) + (el.note ? 12 : 0));
 
@@ -1303,10 +1312,21 @@ let textY = y + 16;
 // campi dinamici
 pdf.setFont("helvetica", "normal");
 campiDaStampare.forEach(([key, value]) => {
+
+    // Cerca il campo nella definizione originale
+    const campoTemplate = campiTemplate.find(c => c.name === key);
+
+    // Se il campo ha spazioPrima: true,
+    // aggiunge spazio prima di stamparlo
+    if (campoTemplate?.spazioPrima) {
+        textY += 8;
+    }
+
     const label = key.replace(/_/g, " ");
     pdf.text(`${label}: ${value}`, 14, textY);
     textY += 6;
 });
+
 
 // canvas a destra
 if (el.canvas) {
