@@ -888,18 +888,41 @@ function creaElemento(tipo) {
     wrapper.style = "border:1px solid #ccc; padding:15px; margin-bottom:20px; background:#fff;";
 
 // La sezione generale viene creata una sola volta
-if (tipo === "serramenti" && container.children.length === 0) {
-    const infoWrapper = document.createElement("div");
+if (container.querySelectorAll('.serramento-wrapper').length === 0) {
 
-    infoWrapper.style = "border:1px solid #ccc; padding:15px; margin-bottom:20px; background:#f8f9fa;";
+    let informazioniGenerali = null;
+    let titoloInformazioni = "";
 
-    infoWrapper.innerHTML = `
-        <h3>Informazioni Generali Serramenti</h3>
-        ${informazioniGeneraliSerramenti.map(c => generaCampo(c)).join("")}
-    `;
+    if (tipo === "serramenti") {
+        informazioniGenerali = informazioniGeneraliSerramenti;
+        titoloInformazioni = "Informazioni Generali Serramenti";
+    }
 
-    container.appendChild(infoWrapper);
+    if (tipo === "porte") {
+        informazioniGenerali = informazioniGeneraliPorte;
+        titoloInformazioni = "Informazioni Generali Porte";
+    }
+
+    if (tipo === "accessori") {
+        informazioniGenerali = informazioniGeneraliAccessori;
+        titoloInformazioni = "Informazioni Generali Accessori";
+    }
+
+    if (informazioniGenerali) {
+        const infoWrapper = document.createElement("div");
+
+        infoWrapper.style =
+            "border:1px solid #ccc; padding:15px; margin-bottom:20px; background:#f8f9fa;";
+
+        infoWrapper.innerHTML = `
+            <h3>${titoloInformazioni}</h3>
+            ${informazioniGenerali.map(c => generaCampo(c)).join("")}
+        `;
+
+        container.appendChild(infoWrapper);
+    }
 }
+
 
     
     wrapper.innerHTML = `
