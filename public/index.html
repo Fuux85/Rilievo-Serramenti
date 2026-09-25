@@ -729,7 +729,7 @@ const sectionTemplates = {
              { label: "Altezza (mm)", name: "Altezza_Avvolgibili", type: "number" },
              { label: "Comando", name: "Comando_Avvolgibili", type: "select", options: ["Cinghia", "Motore"] }]},
         
-        { label: "Ispezione Avvolgibili", name: "Ispezione_Avvolgibili", type: "select", options: ["Sì", "No"],
+        { label: "Ispezione Avvolgibili", name: "Ispezione_Avvolgibili", type: "select", options: ["Sì", "No"], spazioPrima: true,
         conditionalFields:
             [ { label: "Scegli Tipologia", name: "Tipologia_Ispezione", type: "select", options: ["Cielino", "Cassonetto", "Tappo"] },
               { label: "Larghezza (mm)", name: "Larghezza_Elemento", type: "number" },
@@ -738,13 +738,13 @@ const sectionTemplates = {
         
         ] },
 
-                { label: "Coibentazioni", name: "Coibentazioni", type: "select", options: ["Sì", "No"],
+                { label: "Coibentazioni", name: "Coibentazioni", type: "select", options: ["Sì", "No"], spazioPrima: true,
         conditionalFields:
             [ { label: "Scegli Tipologia", name: "Tipologia_Coibentazioni", type: "select", options: ["Termiche", "Acustiche", "Termiche + Acustiche"] }
                       
         ] },
 
-                { label: "Persiane", name: "Persiane", type: "select", options: ["Sì", "No"],
+                { label: "Persiane", name: "Persiane", type: "select", options: ["Sì", "No"], spazioPrima: true,
         conditionalFields:
             [ { label: "Tipologia Persiana", name: "Tipologia_Persiana", type: "text" , placeholder: "es. Con Telaio, Cardini a Muro, Etc.." },
               { label: "Larghezza (mm)", name: "Larghezza_Persiana", type: "number" },
@@ -753,7 +753,7 @@ const sectionTemplates = {
          ] },
         
 
-             { label: "Zanzariere", name: "Zanzariere", type: "select", options: ["Sì", "No"],
+             { label: "Zanzariere", name: "Zanzariere", type: "select", options: ["Sì", "No"], spazioPrima: true,
         conditionalFields:
             [ { label: "Tipologia Zanzariera", name: "Tipologia_Zanzariera", type: "text" , placeholder: "es. Fissa, Laterale, Verticale, Etc.." },
               { label: "Larghezza (mm)", name: "Larghezza_Zanzariera", type: "number" },
@@ -763,7 +763,7 @@ const sectionTemplates = {
 
         
 
-                { label: "Grate", name: "Grate", type: "select", options: ["Sì", "No"],
+                { label: "Grate", name: "Grate", type: "select", options: ["Sì", "No"], spazioPrima: true,
         conditionalFields:
             [ { label: "Tipologia Grata", name: "Tipologia_Grata", type: "text" , placeholder: "es. Fissa, A Snodo, Etc.." },
               { label: "Larghezza (mm)", name: "Larghezza_Grata", type: "number" },
@@ -786,7 +786,7 @@ function generaCampo(campo) {
     let html = "";
     
     // Spazio sopra il campo, se richiesto
-    const stileSpazio = campo.spazioPrima ? 'style="margin-top: 50px;"' : '';
+    const stileSpazio = campo.spazioPrima ? 'style="margin-top: 60px;"' : '';
 
     html += `<div ${stileSpazio}>`;
 
