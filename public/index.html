@@ -723,7 +723,7 @@ const sectionTemplates = {
         { label: "Contatti Magnetici", name: "Contatti_Magnetici", type: "select", options: ["Sì", "No"] },
         { label: "Esposizione", name: "Esposizione", type: "select", options: ["Nord", "Sud", "Est", "Ovest"] },
 
-        { label: "Avvolgibili", name: "Avvolgibili", type: "select", options: ["Sì", "No"],
+        { label: "Avvolgibili", name: "Avvolgibili", type: "select", options: ["Sì", "No"], spazioPrima: true,
         conditionalFields:
             [{ label: "Larghezza (mm)", name: "Larghezza_Avvolgibili", type: "number" },
              { label: "Altezza (mm)", name: "Altezza_Avvolgibili", type: "number" },
@@ -784,6 +784,11 @@ const sectionTemplates = {
 
 function generaCampo(campo) {
     let html = "";
+    
+    // Spazio sopra il campo, se richiesto
+    const stileSpazio = campo.spazioPrima ? 'style="margin-top: 30px;"' : '';
+
+    html += `<div ${stileSpazio}>`;
 
     if (campo.type === "select") {
         html += `
